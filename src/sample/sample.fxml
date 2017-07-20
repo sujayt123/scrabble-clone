@@ -24,7 +24,7 @@
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="900.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <top>
-      <VBox BorderPane.alignment="CENTER">
+      <VBox maxHeight="150.0" BorderPane.alignment="CENTER">
          <children>
             <MenuBar>
               <menus>
@@ -45,19 +45,20 @@
                 </Menu>
               </menus>
             </MenuBar>
-            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Scrabble">
-               <font>
-                  <Font size="54.0" />
-               </font>
-               <VBox.margin>
-                  <Insets left="385.0" top="15.0" />
-               </VBox.margin>
-            </Text>
+            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Scrabble">
+                     <font>
+                        <Font name="FreeSans" size="54.0" />
+                     </font>
+                  </Text>
+               </children>
+            </HBox>
          </children>
       </VBox>
    </top>
    <center>
-      <GridPane alignment="CENTER" gridLinesVisible="true" maxHeight="650.0" maxWidth="650.0" minHeight="650.0" minWidth="650.0" prefHeight="650.0" prefWidth="650.0" BorderPane.alignment="CENTER">
+      <GridPane alignment="CENTER" gridLinesVisible="true" maxHeight="610.0" maxWidth="650.0" minHeight="610.0" minWidth="650.0" prefHeight="610.0" prefWidth="650.0" BorderPane.alignment="TOP_CENTER">
         <columnConstraints>
           <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
           <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
