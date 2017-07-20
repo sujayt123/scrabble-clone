@@ -1,0 +1,15 @@
+.TW-tile {
+    -fx-background-color : orange;
+}
+
+.DW-tile {
+    -fx-background-color : pink;
+}
+
+.TL-tile {
+    -fx-background-color : mediumturquoise;
+}
+
+.DL-tile {
+    -fx-background-color: skyblue;
+}
