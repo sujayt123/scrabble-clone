@@ -1,3 +1,8 @@
+.root {
+    -fx-font-size: 12pt;
+    -fx-font-family: "Arial";
+}
+
 .TW-tile {
     -fx-background-color : orange;
 }
@@ -12,4 +17,9 @@
 
 .DL-tile {
     -fx-background-color: skyblue;
+}
+
+.special-tile-text {
+    -fx-font-size: 10pt;
+    -fx-text-fill: gray;
 }
