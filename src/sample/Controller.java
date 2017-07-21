@@ -91,6 +91,32 @@ public class Controller implements Initializable {
                     }
                 });
 
+                //TODO What should the board do when it receives a tile? Rigorously define the procedure
+                child.setOnDragDropped(new EventHandler <DragEvent>() {
+                    public void handle(DragEvent event) {
+                        /* data dropped */
+                        System.out.println("onDragDropped");
+                        /* if there is a string data on dragboard, read it and use it */
+                        Dragboard db = event.getDragboard();
+                        boolean success = false;
+                        if (db.hasString()) {
+                            // Creates the text element in the view model at that position if it doesn't exist.
+                            if (viewModel[row][col] == null)
+                            {
+                                viewModel[row][col] = new Text(db.getString());
+                                ((StackPane)child).getChildren().add(viewModel[row][col]);
+                            }
+                            viewModel[row][col].setText(db.getString());
+
+                            success = true;
+                        }
+                        /* let the source know whether the string was successfully
+                         * transferred and used */
+                        event.setDropCompleted(success);
+
+                        event.consume();
+                    }
+                });
             }
         });
 
@@ -151,7 +177,19 @@ public class Controller implements Initializable {
                     event.consume();
                 }
             });
-        }
 
+            s.setOnDragDone(new EventHandler <DragEvent>() {
+                public void handle(DragEvent event) {
+                /* the drag-and-drop gesture ended */
+                    System.out.println("onDragDone");
+                /* if the data was successfully moved, clear it */
+                    if (event.getTransferMode() == TransferMode.MOVE) {
+                        playerHandHBox.getChildren().remove(s);
+                    }
+
+                    event.consume();
+                }
+            });
+        }
     }
 }

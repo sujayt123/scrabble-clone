@@ -20,6 +20,6 @@
 }
 
 .special-tile-text {
-    -fx-font-size: 10pt;
-    -fx-text-fill: gray;
+    -fx-font-size: 11pt;
+    -fx-fill: gray;
 }
