@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.*?>
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.shape.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
@@ -20,9 +13,10 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="900.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="900.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <top>
       <VBox maxHeight="150.0" BorderPane.alignment="CENTER">
          <children>
@@ -58,7 +52,7 @@
       </VBox>
    </top>
    <center>
-      <GridPane alignment="CENTER" gridLinesVisible="true" maxHeight="610.0" maxWidth="650.0" minHeight="610.0" minWidth="650.0" prefHeight="610.0" prefWidth="650.0" BorderPane.alignment="TOP_CENTER">
+      <GridPane fx:id="gridPane" alignment="CENTER" gridLinesVisible="true" maxHeight="610.0" maxWidth="650.0" minHeight="610.0" minWidth="650.0" prefHeight="610.0" prefWidth="650.0" BorderPane.alignment="TOP_CENTER">
         <columnConstraints>
           <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
           <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
@@ -99,117 +93,117 @@
          <children>
              <StackPane styleClass="TW-tile" GridPane.columnIndex="0" GridPane.rowIndex="0">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="1" />
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="2" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="0" GridPane.rowIndex="3">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="5" />
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="6" />
              <StackPane styleClass="TW-tile" GridPane.columnIndex="0" GridPane.rowIndex="7">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0"  text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="8" />
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="10" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="0" GridPane.rowIndex="11">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="12" />
              <StackPane GridPane.columnIndex="0" GridPane.rowIndex="13" />
-             <StackPane styleClass="TW-tile" GridPane.rowIndex="14">
+             <StackPane styleClass="TW-tile" GridPane.columnIndex="0" GridPane.rowIndex="14">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="0" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="1" GridPane.rowIndex="1">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="2" />
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="4" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="1" GridPane.rowIndex="5">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="6" />
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="7" />
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="8" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="1" GridPane.rowIndex="9">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="11" />
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="12" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="1" GridPane.rowIndex="13">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="14" />
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="0" />
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="1" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="2" GridPane.rowIndex="2">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="5" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="2" GridPane.rowIndex="6">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="7" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="2" GridPane.rowIndex="8">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="11" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="2" GridPane.rowIndex="12">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="13" />
              <StackPane GridPane.columnIndex="2" GridPane.rowIndex="14" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="3" GridPane.rowIndex="0">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="1" />
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="2" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="3" GridPane.rowIndex="3">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="5" />
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="6" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="3" GridPane.rowIndex="7">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="8" />
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="10" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="3" GridPane.rowIndex="11">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="12" />
              <StackPane GridPane.columnIndex="3" GridPane.rowIndex="13" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="3" GridPane.rowIndex="14">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="0" />
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="1" />
@@ -217,7 +211,7 @@
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="3" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="4" GridPane.rowIndex="4">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="5" />
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="6" />
@@ -226,7 +220,7 @@
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="9" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="4" GridPane.rowIndex="10">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="11" />
              <StackPane GridPane.columnIndex="4" GridPane.rowIndex="12" />
@@ -235,139 +229,139 @@
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="0" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="5" GridPane.rowIndex="1">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="2" />
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="4" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="5" GridPane.rowIndex="5">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="6" />
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="7" />
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="8" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="5" GridPane.rowIndex="9">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="11" />
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="12" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="5" GridPane.rowIndex="13">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="5" GridPane.rowIndex="14" />
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="0" />
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="1" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="6" GridPane.rowIndex="2">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="5" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="6" GridPane.rowIndex="6">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="7" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="6" GridPane.rowIndex="8">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="11" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="6" GridPane.rowIndex="12">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="13" />
              <StackPane GridPane.columnIndex="6" GridPane.rowIndex="14" />
              <StackPane styleClass="TW-tile" GridPane.columnIndex="7" GridPane.rowIndex="0">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="1" />
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="2" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="7" GridPane.rowIndex="3">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="5" />
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="6" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="7" GridPane.rowIndex="7">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="8" />
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="10" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="7" GridPane.rowIndex="11">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="12" />
              <StackPane GridPane.columnIndex="7" GridPane.rowIndex="13" />
              <StackPane styleClass="TW-tile" GridPane.columnIndex="7" GridPane.rowIndex="14">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="0" />
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="1" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="8" GridPane.rowIndex="2">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="5" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="8" GridPane.rowIndex="6">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="7" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="8" GridPane.rowIndex="8">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="11" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="8" GridPane.rowIndex="12">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="13" />
              <StackPane GridPane.columnIndex="8" GridPane.rowIndex="14" />
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="0" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="9" GridPane.rowIndex="1">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="2" />
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="4" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="9" GridPane.rowIndex="5">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="6" />
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="7" />
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="8" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="9" GridPane.rowIndex="9">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="11" />
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="12" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="9" GridPane.rowIndex="13">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="9" GridPane.rowIndex="14" />
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="0" />
@@ -376,7 +370,7 @@
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="3" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="10" GridPane.rowIndex="4">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="5" />
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="6" />
@@ -385,7 +379,7 @@
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="9" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="10" GridPane.rowIndex="10">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="11" />
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="12" />
@@ -393,117 +387,117 @@
              <StackPane GridPane.columnIndex="10" GridPane.rowIndex="14" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="11" GridPane.rowIndex="0">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="1" />
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="2" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="11" GridPane.rowIndex="3">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="5" />
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="6" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="11" GridPane.rowIndex="7">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="8" />
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="10" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="11" GridPane.rowIndex="11">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="12" />
              <StackPane GridPane.columnIndex="11" GridPane.rowIndex="13" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="11" GridPane.rowIndex="14">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="0" />
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="1" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="12" GridPane.rowIndex="2">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="5" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="12" GridPane.rowIndex="6">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="7" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="12" GridPane.rowIndex="8">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="11" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="12" GridPane.rowIndex="12">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="13" />
              <StackPane GridPane.columnIndex="12" GridPane.rowIndex="14" />
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="0" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="13" GridPane.rowIndex="1">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="2" />
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="3" />
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="4" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="13" GridPane.rowIndex="5">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="6" />
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="7" />
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="8" />
              <StackPane styleClass="TL-tile" GridPane.columnIndex="13" GridPane.rowIndex="9">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="10" />
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="11" />
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="12" />
              <StackPane styleClass="DW-tile" GridPane.columnIndex="13" GridPane.rowIndex="13">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="13" GridPane.rowIndex="14" />
              <StackPane styleClass="TW-tile" GridPane.columnIndex="14" GridPane.rowIndex="0">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="1" />
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="2" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="14" GridPane.rowIndex="3">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="4" />
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="5" />
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="6" />
              <StackPane styleClass="TW-tile" GridPane.columnIndex="14" GridPane.rowIndex="7">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="8" />
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="9" />
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="10" />
              <StackPane styleClass="DL-tile" GridPane.columnIndex="14" GridPane.rowIndex="11">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="DL" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="DL" />
                </children></StackPane>
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="12" />
              <StackPane GridPane.columnIndex="14" GridPane.rowIndex="13" />
              <StackPane styleClass="TW-tile" GridPane.columnIndex="14" GridPane.rowIndex="14">
                <children>
-                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="TW" styleClass="special-tile-text"/>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" styleClass="special-tile-text" text="TW" />
                </children></StackPane>
          </children>
       </GridPane>
