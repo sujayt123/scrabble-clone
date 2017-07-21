@@ -1,10 +1,11 @@
 package sample;
 
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.input.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
 import java.net.URL;
@@ -41,6 +42,7 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         /*
          * Initialize the bindings to the viewmodel (view's understanding of board) and the board cells housing them.
+         * Also mark the GridPane cells as valid targets for a drag n' drop motion.
          */
         gridPane.getChildren().forEach((child)->{
             if (child instanceof StackPane)
@@ -53,6 +55,42 @@ public class Controller implements Initializable {
                         viewModel[row][col] = (Text) item_in_stackpane;
                     }
                 });
+                child.setOnDragOver(new EventHandler <DragEvent>() {
+                    public void handle(DragEvent event) {
+                        /* data is dragged over the target */
+                        System.out.println("onDragOver");
+
+                        /* accept it only if it is  not dragged from the same node
+                         * and if it has a string data */
+                        if (event.getGestureSource() != child &&
+                                event.getDragboard().hasString()) {
+                            /* allow for both copying and moving, whatever user chooses */
+                            event.acceptTransferModes(TransferMode.MOVE);
+                        }
+
+                        event.consume();
+                    }
+                });
+                child.setOnDragEntered(new EventHandler<DragEvent>() {
+                    public void handle(DragEvent event) {
+                        /* the drag-and-drop gesture entered the target */
+                        /* show to the user that it is an actual gesture target */
+                        if (event.getGestureSource() != child &&
+                                event.getDragboard().hasString()) {
+                            child.setStyle("-fx-border-color: darkblue; -fx-border-width: 3;");
+                        }
+
+                        event.consume();
+                    }
+                });
+                child.setOnDragExited(new EventHandler <DragEvent>() {
+                    public void handle(DragEvent event) {
+                /* mouse moved away, remove the graphical cues */
+                        child.setStyle("-fx-border-width: 0;");
+                        event.consume();
+                    }
+                });
+
             }
         });
 
@@ -86,14 +124,34 @@ public class Controller implements Initializable {
         // Display the player's hand as stackpanes in the HBox in the bottom of the borderpane layout.
         for (int i = 0; i < 7 ; i++)
         {
+            final int ii = i;
             StackPane s = new StackPane();
             s.setStyle("-fx-background-color: lightyellow");
             s.setMinWidth(40);
             s.setMinHeight(40);
             s.setMaxWidth(40);
             s.setMaxHeight(40);
-            s.getChildren().add(new Text("" + playerHand[i]));
+            s.getChildren().add(new Text("" + playerHand[ii]));
             playerHandHBox.getChildren().add(s);
+
+            // Mark the user's tiles as valid sources for a drag n' drop motion.
+            s.setOnDragDetected(new EventHandler<MouseEvent>() {
+                public void handle(MouseEvent event) {
+                /* drag was detected, start drag-and-drop gesture*/
+                    System.out.println("onDragDetected");
+
+                /* allow any transfer mode */
+                    Dragboard db = s.startDragAndDrop(TransferMode.MOVE);
+
+                /* put a string on dragboard */
+                    ClipboardContent content = new ClipboardContent();
+                    content.putString("" + playerHand[ii]);
+                    db.setContent(content);
+
+                    event.consume();
+                }
+            });
         }
+
     }
 }
