@@ -23,3 +23,8 @@
     -fx-font-size: 11pt;
     -fx-fill: gray;
 }
+
+.black-text {
+    -fx-font-size: 12pt;
+    -fx-fill: black;
+}

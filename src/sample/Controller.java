@@ -35,7 +35,10 @@ public class Controller implements Initializable {
 
     private char[] playerHand, cpuHand;
 
-    /*
+    // Work-around for a bug with JavaFX drag-n-drop implementation
+    private static boolean wasDropSuccessful = false;
+
+    /**
      * Runs initialization routines right after the view loads.
      */
     @Override
@@ -100,11 +103,17 @@ public class Controller implements Initializable {
                         Dragboard db = event.getDragboard();
                         boolean success = false;
                         if (db.hasString()) {
+                            // Change the text color of the pane to Black if needed.
+
                             // Creates the text element in the view model at that position if it doesn't exist.
                             if (viewModel[row][col] == null)
                             {
                                 viewModel[row][col] = new Text(db.getString());
                                 ((StackPane)child).getChildren().add(viewModel[row][col]);
+                            }
+                            else
+                            {
+                                viewModel[row][col].getStyleClass().add("black-text");
                             }
                             viewModel[row][col].setText(db.getString());
 
@@ -113,6 +122,7 @@ public class Controller implements Initializable {
                         /* let the source know whether the string was successfully
                          * transferred and used */
                         event.setDropCompleted(success);
+                        wasDropSuccessful = true;
 
                         event.consume();
                     }
@@ -137,8 +147,8 @@ public class Controller implements Initializable {
         tilesRemaining = new ArrayDeque<>(tileList);
 
         // Prepare each player to receive tiles.
-        playerHand = new char[9];
-        cpuHand = new char[9];
+        playerHand = new char[7];
+        cpuHand = new char[7];
 
         // Distribute the starting racks (hereafter referenced as "hands") to the computer and the player.
         for (int i = 0; i < 7; i++)
@@ -150,46 +160,107 @@ public class Controller implements Initializable {
         // Display the player's hand as stackpanes in the HBox in the bottom of the borderpane layout.
         for (int i = 0; i < 7 ; i++)
         {
-            final int ii = i;
-            StackPane s = new StackPane();
-            s.setStyle("-fx-background-color: lightyellow");
-            s.setMinWidth(40);
-            s.setMinHeight(40);
-            s.setMaxWidth(40);
-            s.setMaxHeight(40);
-            s.getChildren().add(new Text("" + playerHand[ii]));
-            playerHandHBox.getChildren().add(s);
-
-            // Mark the user's tiles as valid sources for a drag n' drop motion.
-            s.setOnDragDetected(new EventHandler<MouseEvent>() {
-                public void handle(MouseEvent event) {
-                /* drag was detected, start drag-and-drop gesture*/
-                    System.out.println("onDragDetected");
-
-                /* allow any transfer mode */
-                    Dragboard db = s.startDragAndDrop(TransferMode.MOVE);
-
-                /* put a string on dragboard */
-                    ClipboardContent content = new ClipboardContent();
-                    content.putString("" + playerHand[ii]);
-                    db.setContent(content);
-
-                    event.consume();
-                }
-            });
-
-            s.setOnDragDone(new EventHandler <DragEvent>() {
-                public void handle(DragEvent event) {
-                /* the drag-and-drop gesture ended */
-                    System.out.println("onDragDone");
-                /* if the data was successfully moved, clear it */
-                    if (event.getTransferMode() == TransferMode.MOVE) {
-                        playerHandHBox.getChildren().remove(s);
-                    }
-
-                    event.consume();
-                }
-            });
+            addTileToUserHand(playerHand[i]);
         }
+    }
+
+    /**
+     * Recall all tiles placed on the board this turn to the player's hand.
+     */
+    public void recallTiles()
+    {
+        for (int i = 0 ; i < 15; i++)
+        {
+            for (int j = 0; j < 15; j++)
+            {
+                if (viewModel[i][j] != null && viewModel[i][j].getText().length() == 1
+                        && viewModel[i][j].getText().charAt(0) != mainModel[i][j])
+                {
+                    addTileToUserHand(viewModel[i][j].getText().charAt(0));
+
+                    // Reset the view model's text in accordance with whether it's a special tile.
+                    if (board_cells[i][j].getStyleClass().size() > 0)
+                    {
+                        String specialText = board_cells[i][j].getStyleClass().get(0).substring(0, 2);
+                        viewModel[i][j].setText(specialText);
+                        viewModel[i][j].getStyleClass().remove("black-text");
+                    }
+                    else
+                    {
+                        viewModel[i][j].setText("");
+                    }
+                }
+            }
+        }
+
+        // Bug fix.
+        Map<Character, Integer> lettersNotInHand = new HashMap<>();
+        for (char c: playerHand)
+        {
+            if (!lettersNotInHand.containsKey(c))
+            {
+                lettersNotInHand.put(c, 0);
+            }
+            lettersNotInHand.put(c, lettersNotInHand.get(c) + 1);
+        }
+
+        playerHandHBox.getChildren().forEach((stackpane) -> {
+            ((StackPane)stackpane).getChildren().forEach((text) -> {
+                char c = ((Text)text).getText().charAt(0);
+                lettersNotInHand.put(c, lettersNotInHand.get(c) - 1);
+            });
+        });
+
+        System.out.println(lettersNotInHand.toString());
+
+        lettersNotInHand.forEach((k, v) -> {
+            for (int i = 0; i < v; i++) {
+                addTileToUserHand(k);
+            }
+        });
+
+    }
+
+    public void addTileToUserHand(char letter)
+    {
+        StackPane s = new StackPane();
+        s.setStyle("-fx-background-color: lightyellow");
+        s.setMinWidth(40);
+        s.setMinHeight(40);
+        s.setMaxWidth(40);
+        s.setMaxHeight(40);
+        s.getChildren().add(new Text(letter + ""));
+        playerHandHBox.getChildren().add(s);
+
+        // Mark the user's tiles as valid sources for a drag n' drop motion.
+        s.setOnDragDetected(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent event) {
+                            /* drag was detected, start drag-and-drop gesture*/
+                System.out.println("onDragDetected");
+
+                            /* allow any transfer mode */
+                Dragboard db = s.startDragAndDrop(TransferMode.MOVE);
+
+                            /* put a string on dragboard */
+                ClipboardContent content = new ClipboardContent();
+                content.putString("" + letter);
+                db.setContent(content);
+
+                event.consume();
+            }
+        });
+
+        s.setOnDragDone(new EventHandler <DragEvent>() {
+            public void handle(DragEvent event) {
+                /* the drag-and-drop gesture ended */
+                System.out.println("onDragDone");
+                /* if the data was successfully moved, clear it */
+                if (event.getTransferMode() == TransferMode.MOVE && wasDropSuccessful) {
+                    playerHandHBox.getChildren().remove(s);
+                    wasDropSuccessful = false;
+                }
+                event.consume();
+            }
+        });
     }
 }
