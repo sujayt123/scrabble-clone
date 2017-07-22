@@ -28,3 +28,24 @@
     -fx-font-size: 12pt;
     -fx-fill: black;
 }
+
+.informative-text {
+    -fx-fill:orange;
+}
+
+.error-text {
+    -fx-fill: orangered;
+}
+
+.success-text {
+    -fx-fill: lightgreen;
+}
+
+#playerScore {
+    -fx-fill: green;
+}
+
+#cpuScore {
+    -fx-fill: red;
+}
+

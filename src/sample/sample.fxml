@@ -520,7 +520,7 @@
                      <children>
                         <VBox alignment="CENTER" prefHeight="200.0" prefWidth="120.0" spacing="5.0">
                            <children>
-                              <Button maxWidth="120.0" mnemonicParsing="false" text="Move" />
+                              <Button maxWidth="120.0" mnemonicParsing="false" onAction="#attemptPlayerMove" text="Move" />
                               <Button maxWidth="120.0" mnemonicParsing="false" onAction="#recallTiles" text="Recall" />
                            </children>
                         </VBox>
@@ -533,6 +533,19 @@
                      </children>
                   </HBox>
                </children>
+            </HBox>
+            <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="200.0" spacing="125.0">
+               <children>
+                  <Text fx:id="playerScore" strokeType="OUTSIDE" strokeWidth="0.0" text="Player Score" />
+                  <Text fx:id="cpuScore" strokeType="OUTSIDE" strokeWidth="0.0" text="CPU Score" />
+                  <Text fx:id="statusMessage" strokeType="OUTSIDE" strokeWidth="0.0">
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin></Text>
+               </children>
+               <padding>
+                  <Insets right="100.0" top="15.0" />
+               </padding>
             </HBox>
          </children>
       </VBox>

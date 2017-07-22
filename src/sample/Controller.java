@@ -23,6 +23,15 @@ public class Controller implements Initializable {
     @FXML
     private HBox playerHandHBox;
 
+    @FXML
+    private Text playerScore;
+
+    @FXML
+    private Text cpuScore;
+
+    @FXML
+    private Text statusMessage;
+
     /* The data currently represented on the screen. Propagates to main model at certain points in gameplay.
      * Bound to the text stored in each board_cell, if it exists. Any non-existing text states are created lazily.
      */
@@ -273,4 +282,33 @@ public class Controller implements Initializable {
             }
         });
     }
+
+    public void attemptPlayerMove()
+    {
+        if (isValidMove())
+        {
+            makePlayerMove();
+        }
+        else
+        {
+            statusMessage.setText("That didn't work out so well.");
+            statusMessage.getStyleClass().add("error-text");
+        }
+    }
+
+    public boolean isValidMove()
+    {
+        return false;
+    }
+
+    public void makePlayerMove()
+    {
+        // propagate viewModel to model
+        // increment player score
+        // remove X tiles from the rack
+        // take as many of X tiles from the bag as you can and give them to the player
+        // let CPU make its move
+    }
+
+
 }
