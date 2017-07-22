@@ -35,7 +35,7 @@ public class Controller implements Initializable {
 
     private char[] playerHand, cpuHand;
 
-    // Work-around for a bug with JavaFX drag-n-drop implementation
+    // Work-around for an edge case with JavaFX drag-n-drop implementation
     private static boolean wasDropSuccessful = false;
 
     /**
@@ -64,10 +64,12 @@ public class Controller implements Initializable {
                         System.out.println("onDragOver");
 
                         /* accept it only if it is  not dragged from the same node
-                         * and if it has a string data */
+                         * and if it has a string data. also, ensure that
+                          * the board cell can actually receive this tile */
                         if (event.getGestureSource() != child &&
-                                event.getDragboard().hasString()) {
-                            /* allow for both copying and moving, whatever user chooses */
+                                event.getDragboard().hasString() &&
+                                (viewModel[row][col] == null ||
+                                 viewModel[row][col].getText().length() != 1)) {
                             event.acceptTransferModes(TransferMode.MOVE);
                         }
 
@@ -79,7 +81,9 @@ public class Controller implements Initializable {
                         /* the drag-and-drop gesture entered the target */
                         /* show to the user that it is an actual gesture target */
                         if (event.getGestureSource() != child &&
-                                event.getDragboard().hasString()) {
+                                event.getDragboard().hasString() &&
+                                (viewModel[row][col] == null ||
+                                        viewModel[row][col].getText().length() != 1)) {
                             child.setStyle("-fx-border-color: darkblue; -fx-border-width: 3;");
                         }
 
@@ -192,33 +196,6 @@ public class Controller implements Initializable {
                 }
             }
         }
-
-        // Bug fix.
-        Map<Character, Integer> lettersNotInHand = new HashMap<>();
-        for (char c: playerHand)
-        {
-            if (!lettersNotInHand.containsKey(c))
-            {
-                lettersNotInHand.put(c, 0);
-            }
-            lettersNotInHand.put(c, lettersNotInHand.get(c) + 1);
-        }
-
-        playerHandHBox.getChildren().forEach((stackpane) -> {
-            ((StackPane)stackpane).getChildren().forEach((text) -> {
-                char c = ((Text)text).getText().charAt(0);
-                lettersNotInHand.put(c, lettersNotInHand.get(c) - 1);
-            });
-        });
-
-        System.out.println(lettersNotInHand.toString());
-
-        lettersNotInHand.forEach((k, v) -> {
-            for (int i = 0; i < v; i++) {
-                addTileToUserHand(k);
-            }
-        });
-
     }
 
     public void addTileToUserHand(char letter)
@@ -260,6 +237,39 @@ public class Controller implements Initializable {
                     wasDropSuccessful = false;
                 }
                 event.consume();
+            }
+        });
+    }
+
+    /**
+     * Optional method to ensure the hand is consistent with what's displayed on the screen.
+     * JavaFX appears to have some edge cases with drag-n-drop that may require this method
+     * or other solutions (like flags) to address.
+     */
+    public void ensureHandConsistentWithGUI()
+    {
+        Map<Character, Integer> lettersNotInHand = new HashMap<>();
+        for (char c: playerHand)
+        {
+            if (!lettersNotInHand.containsKey(c))
+            {
+                lettersNotInHand.put(c, 0);
+            }
+            lettersNotInHand.put(c, lettersNotInHand.get(c) + 1);
+        }
+
+        playerHandHBox.getChildren().forEach((stackpane) -> {
+            ((StackPane)stackpane).getChildren().forEach((text) -> {
+                char c = ((Text)text).getText().charAt(0);
+                lettersNotInHand.put(c, lettersNotInHand.get(c) - 1);
+            });
+        });
+
+        System.out.println(lettersNotInHand.toString());
+
+        lettersNotInHand.forEach((k, v) -> {
+            for (int i = 0; i < v; i++) {
+                addTileToUserHand(k);
             }
         });
     }
