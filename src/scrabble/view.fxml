@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Menu?>
@@ -15,9 +20,9 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="900.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scrabble.Controller">
+<BorderPane stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scrabble.Controller">
    <top>
-      <VBox maxHeight="150.0" BorderPane.alignment="CENTER">
+      <VBox BorderPane.alignment="CENTER">
          <children>
             <MenuBar>
               <menus>
@@ -33,7 +38,7 @@
                 </Menu>
               </menus>
             </MenuBar>
-            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+            <HBox alignment="CENTER">
                <children>
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Scrabble">
                      <font>
@@ -46,43 +51,43 @@
       </VBox>
    </top>
    <center>
-      <GridPane fx:id="gridPane" alignment="CENTER" gridLinesVisible="true" maxHeight="610.0" maxWidth="650.0" minHeight="610.0" minWidth="650.0" prefHeight="610.0" prefWidth="650.0" BorderPane.alignment="TOP_CENTER">
+      <GridPane fx:id="gridPane" alignment="CENTER" gridLinesVisible="true" BorderPane.alignment="TOP_CENTER">
         <columnConstraints>
-          <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-          <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
-            <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="40.0" />
+          <ColumnConstraints halignment="CENTER" />
+          <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
+            <ColumnConstraints halignment="CENTER" />
         </columnConstraints>
         <rowConstraints>
-          <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-          <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-          <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
-            <RowConstraints minHeight="40.0" valignment="CENTER" vgrow="NEVER" />
+          <RowConstraints valignment="CENTER" />
+          <RowConstraints valignment="CENTER" />
+          <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
+            <RowConstraints valignment="CENTER" />
         </rowConstraints>
          <BorderPane.margin>
-            <Insets />
+            <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
          </BorderPane.margin>
          <children>
              <StackPane styleClass="TW-tile" GridPane.columnIndex="0" GridPane.rowIndex="0">
@@ -497,11 +502,11 @@
       </GridPane>
    </center>
    <bottom>
-      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+      <VBox BorderPane.alignment="CENTER">
          <children>
-            <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0">
+            <HBox alignment="CENTER" spacing="20.0">
                <children>
-                  <HBox fx:id="playerHandHBox" alignment="CENTER" maxWidth="500.0" minWidth="500.0" prefWidth="500.0" spacing="25.0" style="-fx-background-color: linear-gradient(lemonchiffon,yellow); -fx-border-color: khaki;">
+                  <HBox fx:id="playerHandHBox" alignment="CENTER" prefWidth="500.0" spacing="25.0" style="-fx-background-color: linear-gradient(lemonchiffon,yellow); -fx-border-color: khaki;">
                      <padding>
                         <Insets left="20.0" right="20.0" />
                      </padding>
@@ -524,7 +529,7 @@
                   </HBox>
                </children>
             </HBox>
-            <HBox alignment="TOP_CENTER" prefHeight="100.0" prefWidth="200.0" spacing="125.0">
+            <HBox alignment="TOP_CENTER" spacing="125.0">
                <children>
                   <Text fx:id="playerScore" strokeType="OUTSIDE" strokeWidth="0.0" text="Player Score:0" />
                   <Text fx:id="cpuScore" strokeType="OUTSIDE" strokeWidth="0.0" text="CPU Score:0" />
@@ -538,6 +543,12 @@
                </padding>
             </HBox>
          </children>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="10.0" right="10.0" />
+         </BorderPane.margin>
       </VBox>
    </bottom>
 </BorderPane>

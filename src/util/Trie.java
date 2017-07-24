@@ -1,6 +1,7 @@
 package util;
 
 import java.io.*;
+import java.net.URL;
 
 /**
  * Created by sujay on 7/21/17.
@@ -9,12 +10,12 @@ public class Trie {
 
     public TrieNode root;
 
-    public Trie()
+    public Trie() throws Exception
     {
         root = new TrieNode(false);
 
-        File file = new File("./src/util/dictionary.txt");
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        URL dictionary = new URL("https://raw.githubusercontent.com/sujayt123/ScrabbleClone/master/src/util/dictionary.txt");
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(dictionary.openStream()))) {
             String line;
             while ((line = br.readLine()) != null) {
                 // process the line.
