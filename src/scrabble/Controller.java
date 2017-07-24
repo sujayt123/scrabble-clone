@@ -1215,13 +1215,13 @@ public class Controller implements Initializable {
     private void cleanup()
     {
         statusMessage.setText("Game over.");
-        boolean playerWon = playerHand.isEmpty() || (cpuConsecutiveZeroScoringTurns == 3);
+        boolean normalEnding = playerHand.isEmpty() || cpuHand.isEmpty();
         int pScore = Integer.parseInt(this.playerScore.getText().split(":")[1]);
         int aiScore = Integer.parseInt(this.cpuScore.getText().split(":")[1]);
         // When the game is finished,
-        if (cpuConsecutiveZeroScoringTurns < 3 && playerConsecutiveZeroScoringTurns < 3)
+        if (normalEnding)
         {
-            if (playerWon)
+            if (playerHand.isEmpty())
             {
                 pScore += 2 * cpuHand.stream().map(TileHelper::scoreCharacter).reduce((a, b) -> a + b).get();
             }
@@ -1229,17 +1229,22 @@ public class Controller implements Initializable {
             {
                 aiScore += 2 * playerHand.stream().map(TileHelper::scoreCharacter).reduce((a, b) -> a + b).get();
             }
-
         }
         playerScore.setText("Player Score:" + pScore);
         cpuScore.setText("CPU Score:" + aiScore);
 
         int pointDifferential = Math.abs(pScore - aiScore);
-        if (playerWon)
+        if (pScore > aiScore)
         {
             statusMessage.getStyleClass().removeAll();
             statusMessage.getStyleClass().add("success-text");
             statusMessage.setText("Congratulations! You won by " + pointDifferential + " points.");
+        }
+        else if (pScore == aiScore)
+        {
+            statusMessage.getStyleClass().removeAll();
+            statusMessage.getStyleClass().add("success-text");
+            statusMessage.setText("Tie game!");
         }
         else
         {
