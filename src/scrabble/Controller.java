@@ -245,7 +245,7 @@ public class Controller implements Initializable {
                              */
                             viewModel.get(row).get(col).getStyleClass().add("black-text");
 
-                            System.out.println(db.getString());
+//                            System.out.println(db.getString());
                             viewModel.get(row).get(col).setText(db.getString());
 
                             // Remove from hand
@@ -599,7 +599,7 @@ public class Controller implements Initializable {
         List<List<Character>> textInViewModel = forEachBoardSquareAsNestedList((r, c) ->
                 viewModel.get(r).get(c).getText().charAt(0));
 
-        System.out.println("Player score is currently: " + score);
+//        System.out.println("Player score is currently: " + score);
 
         if (!playWasHorizontal)
         {
@@ -623,14 +623,9 @@ public class Controller implements Initializable {
                 viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' '
         );
 
-        for (int i = 0 ; i < 15; i++)
-        {
-            for (int j = 0 ; j < 15; j++)
-                System.out.print(mainModel.get(i).get(j));
-            System.out.println();
-        }
+//pr
 
-        System.out.println("UHHHH");
+//        System.out.println("UHHHH");
 
         // Step 3: take as many tiles from the bag as you can (up to the number removed) and give them to the player
         forEachProvidedSquareAsList( (row, col) -> {
@@ -656,7 +651,7 @@ public class Controller implements Initializable {
 //        BoardHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Vertical set for " + x.toString() + " : " + verticalCrossCheckSetsForModel[x.getKey()][x.getValue()]));
 //        BoardHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Horizontal set for " + x.toString() + " : " + horizontalCrossCheckSetsForModelTranspose[x.getValue()][x.getKey()]));
 
-        System.out.println("The CPU has in his hand : " + cpuHand.toString());
+//        System.out.println("The CPU has in his hand : " + cpuHand.toString());
         if (!gameOver(playerHand, playerConsecutiveZeroScoringTurns))
         {
             disablePlayerActions();
@@ -770,7 +765,7 @@ public class Controller implements Initializable {
         Set<Pair<Integer, Integer>> transposedAnchorSquares =
                 anchorSquares.stream().map(x -> new Pair<>(x.getValue(), x.getKey())).collect(Collectors.toSet());
 
-        System.out.println("anchors " + anchorSquares.toString());
+//        System.out.println("anchors " + anchorSquares.toString());
 
         statusMessage.getStyleClass().clear();
         statusMessage.getStyleClass().add("success-text");
@@ -990,7 +985,7 @@ public class Controller implements Initializable {
 
         if (score > bestCPUPlay.getValue().getValue())
         {
-            System.out.println("The word " + partialWord + " garnered " + score + " points for the CPU");
+//            System.out.println("The word " + partialWord + " garnered " + score + " points for the CPU");
             bestCPUPlay = new Pair<>(forEachBoardSquareAsNestedList((r, c) -> board.get(r).get(c)),
                     new Pair<>(partialWord.concat(""), score));
         }
