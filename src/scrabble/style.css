@@ -63,3 +63,7 @@
     -fx-border-width: 3;
 }
 
+.help-subtitles {
+    -fx-font-weight: bold;
+    -fx-font-size: 14pt;
+}

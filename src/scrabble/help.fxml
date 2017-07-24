@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scrabble.HelpBox">
+   <left>
+      <TreeView fx:id="treeView" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+   </left>
+   <top>
+      <MenuBar BorderPane.alignment="CENTER">
+        <menus>
+          <Menu mnemonicParsing="false" />
+        </menus>
+      </MenuBar>
+   </top>
+   <center>
+      <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="40.0" BorderPane.alignment="CENTER">
+         <children>
+            <Text fx:id="titleText" strokeType="OUTSIDE" strokeWidth="0.0" text="Welcome to the Help Screen!">
+               <font>
+                  <Font name="Arial" size="24.0" />
+               </font>
+            </Text>
+            <ScrollPane fx:id="scrollPane">
+               <content>
+                  <TextFlow fx:id="infoTextFlow">
+                     <padding>
+                        <Insets left="30.0" right="30.0" />
+                     </padding>
+                  </TextFlow>
+               </content>
+            </ScrollPane>
+         </children>
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <padding>
+            <Insets top="40.0" />
+         </padding>
+      </VBox>
+   </center>
+</BorderPane>

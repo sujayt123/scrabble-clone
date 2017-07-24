@@ -1241,10 +1241,7 @@ public class Controller implements Initializable {
         swapTilesButton.setDisable(false);
         swapTilesButton.setText("Reset");
         swapTilesButton.setOnAction((e) -> {
-            clearBoard();
-            initialize(null, null);
-            swapTilesButton.setText("Swap Tiles");
-            enablePlayerActions();
+            newGame();
         });
     }
 
@@ -1280,5 +1277,18 @@ public class Controller implements Initializable {
         cpuScore.setText("CPU Score:0");
         statusMessage.setText("");
         statusMessage.getStyleClass().clear();
+    }
+
+    public void showHelpMenu() throws Exception
+    {
+        new HelpBox().display();
+    }
+
+    public void newGame()
+    {
+        clearBoard();
+        initialize(null, null);
+        swapTilesButton.setText("Swap Tiles");
+        enablePlayerActions();
     }
 }
