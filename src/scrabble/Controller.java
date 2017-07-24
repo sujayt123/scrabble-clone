@@ -1304,6 +1304,7 @@ public class Controller implements Initializable {
         clearBoard();
         initialize(null, null);
         swapTilesButton.setText("Swap Tiles");
+        swapTilesButton.setOnAction((e) -> attemptSwap());
         enablePlayerActions();
     }
 }
