@@ -47,8 +47,13 @@ public class HelpBox implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setStyle("-fx-box-border: transparent");
         scrollPane.setFitToWidth(true);
+        infoTextFlow.setLineSpacing(1.25);
+        Text onEntry = new Text("Here, you will find all you need to help get started playing Scrabble!");
+        infoTextFlow.getChildren().add(onEntry);
+
         TreeItem<String> root, rules, controls, about;
         root = new TreeItem<>("Help Menu");
         root.setExpanded(false);
@@ -137,16 +142,39 @@ public class HelpBox implements Initializable {
                                 + "\n\n"
                                 + "Once all tiles are gone from the bag and a single player has placed all of their tiles, the game will end and the player with the highest score wins."
                         );
-                        Text credits = new Text("Adapted from http://www.scrabblepages.com/scrabble/rules/\n\n");
+                        Text credits = new Text("\n\nAdapted from http://www.scrabblepages.com/scrabble/rules/\n\n");
                         infoTextFlow.getChildren().addAll(intro, boldedText1, text1, boldedText2, text2, text3, boldedText3, text4, boldedText4, text5, credits);
                     }
                     if (newValue == controls)
                     {
                         titleText.setText("Controls");
+                        infoTextFlow.getChildren().clear();
+                        Text instruction1P1 = new Text("Drag and drop ");
+                        Text instruction1P2 = new Text("a tile to place it onto the board.\n\n");
+                        Text instruction2P1 = new Text("Move ");
+                        Text instruction2P2 = new Text("to attempt scoring your play.\n\n");
+                        Text instruction3P1 = new Text("Recall ");
+                        Text instruction3P2 = new Text("to bring all placed tiles back to your hand.\n\n");
+                        Text instruction4P1 = new Text("Pass ");
+                        Text instruction4P2 = new Text("to pass the current turn.\n\n");
+                        Text instruction5P1 = new Text("Swap Tiles ");
+                        Text instruction5P2 = new Text("to exchange a number of your tiles with the ones in the bag.\n\n");
+                        instruction1P1.getStyleClass().add("help-subtitles");
+                        instruction2P1.getStyleClass().add("help-subtitles");
+                        instruction3P1.getStyleClass().add("help-subtitles");
+                        instruction4P1.getStyleClass().add("help-subtitles");
+                        instruction5P1.getStyleClass().add("help-subtitles");
+                        infoTextFlow.getChildren().addAll(instruction1P1, instruction1P2, instruction2P1, instruction2P2,
+                                instruction3P1, instruction3P2, instruction4P1, instruction4P2, instruction5P1, instruction5P2);
+
                     }
                     if (newValue == about)
                     {
                         titleText.setText("About");
+                        infoTextFlow.getChildren().clear();
+                        Text developedBy = new Text("Developed by Sujay Tadwalkar\n\n");
+                        Text scrabbleBy = new Text("The Scrabble line of games is owned by Hasbro and no intellectual property violation was intended in the development of this application.\n\n");
+                        infoTextFlow.getChildren().addAll(developedBy, scrabbleBy);
                     }
                 });
     }

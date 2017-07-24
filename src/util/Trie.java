@@ -25,7 +25,7 @@ public class Trie {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Read file into trie, " + TrieNode.numberInsertions + " insertions");
+//        System.out.println("Read file into trie, " + TrieNode.numberInsertions + " insertions");
     }
 
     public TrieNode getNodeForPrefix(String s)
