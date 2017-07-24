@@ -7,7 +7,7 @@ import java.io.*;
  */
 public class Trie {
 
-    private TrieNode root;
+    public TrieNode root;
 
     public Trie()
     {
@@ -18,7 +18,7 @@ public class Trie {
             String line;
             while ((line = br.readLine()) != null) {
                 // process the line.
-                root.insertWord(line.toLowerCase(), 0);
+                root.insertWord(line, 0);
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();

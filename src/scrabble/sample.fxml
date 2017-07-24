@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Menu?>
@@ -20,7 +15,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="900.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scrabble.Controller">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="900.0" stylesheets="@style.css" xmlns="http://javafx.com/javafx/8.0.112" xmlns:fx="http://javafx.com/fxml/1" fx:controller="scrabble.Controller">
    <top>
       <VBox maxHeight="150.0" BorderPane.alignment="CENTER">
          <children>
@@ -520,14 +515,14 @@
                      <children>
                         <VBox alignment="CENTER" prefHeight="200.0" prefWidth="120.0" spacing="5.0">
                            <children>
-                              <Button maxWidth="120.0" mnemonicParsing="false" onAction="#attemptPlayerMove" text="Move" />
-                              <Button maxWidth="120.0" mnemonicParsing="false" onAction="#recallTiles" text="Recall" />
+                              <Button fx:id="moveButton" maxWidth="120.0" mnemonicParsing="false" onAction="#attemptPlayerMove" text="Move" />
+                              <Button fx:id="recallButton" maxWidth="120.0" mnemonicParsing="false" onAction="#recallTiles" text="Recall" />
                            </children>
                         </VBox>
                         <VBox alignment="CENTER" layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="120.0" spacing="5.0">
                            <children>
-                              <Button maxWidth="120.0" mnemonicParsing="false" text="Pass" />
-                              <Button maxWidth="120.0" mnemonicParsing="false" text="Swap Tiles" />
+                              <Button fx:id="passButton" maxWidth="120.0" mnemonicParsing="false" onAction="#passTurn" text="Pass" />
+                              <Button fx:id="swapTilesButton" maxWidth="120.0" mnemonicParsing="false" onAction="#attemptSwap" text="Swap Tiles" />
                            </children>
                         </VBox>
                      </children>

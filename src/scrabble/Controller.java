@@ -1,26 +1,33 @@
 package scrabble;
 
-import javafx.event.EventHandler;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
-import util.TileHelper;
 import util.Trie;
 import util.TrieNode;
 
 import java.net.URL;
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static util.BoardHelper.*;
+import static util.TileHelper.*;
 
 public class Controller implements Initializable {
 
     /**
      *  Access to the GUI representation of the board. Useful for defining drag-and-drop events.
      */
-    private StackPane[][] board_cells = new StackPane[15][15];
+    private StackPane[][] board_cells;
 
     /**
      * Access to the GUI GridPane.
@@ -47,6 +54,12 @@ public class Controller implements Initializable {
     private Text cpuScore;
 
     /**
+     * The buttons in the layout.
+     */
+    @FXML
+    private Button moveButton, passButton, recallButton, swapTilesButton;
+
+    /**
      * Access to the text region containing the status message.
      */
     @FXML
@@ -56,13 +69,13 @@ public class Controller implements Initializable {
      * The data currently represented on the screen. Propagates to main model at certain points in gameplay.
      * Bound to the text stored in each board_cell, if it exists. Any non-existing text states are created lazily.
      */
-    private Text [][] viewModel = new Text[15][15];
+    private List<List<Text>> viewModel;
 
     /**
      *  The most recently accepted state of the board. State may change upon successful user or computer move.
-     *  Initialized to '\0' by default and updated with a-z character values as board changes.
+     *  Updated with a-z character values as board changes.
      */
-    private char [][] mainModel = new char[15][15];
+    private List<List<Character>> mainModel;
 
     /**
      * A queue that represents the bag of tiles remaining.
@@ -79,22 +92,28 @@ public class Controller implements Initializable {
      */
     private List<Pair<Integer, Integer>> changed_tile_coordinates;
 
-    private HashSet[][] crossCheckSets;
-
-    /**
-     * Work-around for an edge case with JavaFX drag-n-drop implementation
-     */
-    private static boolean wasDropSuccessful = false;
+    private HashSet<Character>[][] verticalCrossCheckSetsForModel, horizontalCrossCheckSetsForModelTranspose;
 
     /**
      * A prefix tree data structure to house the dictionary of scrabble words. See "util" for more information.
      */
-    private Trie trie;
+    private static Trie trie;
 
     /**
-     * Flag to invoke additional logic checks if it's the player's first turn.
+     * Flag to disallow placement of tiles on board while the user is swapping.
+     */
+    private boolean isSwapping;
+
+    private int cpuConsecutiveZeroScoringTurns, playerConsecutiveZeroScoringTurns;
+
+    /**
+     * Flag to invoke additional logic checks if it's the first turn of gameplay.
      */
     private boolean isFirstTurn = true;
+
+    private Pair<List<List<Character>>, Pair<String, Integer>> bestCPUPlay = new Pair<>(null, new Pair<>(null, Integer.MAX_VALUE));
+
+    private List<StackPane> elementsToSwap;
 
     /**
      * Initialization code that runs at application boot-time.
@@ -104,16 +123,33 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         /* Read dictionary into trie. */
-        trie = new Trie();
+        if (trie == null)
+        {
+            trie = new Trie();
+        }
+        board_cells = new StackPane[15][15];
+
+        cpuConsecutiveZeroScoringTurns = 0;
+        playerConsecutiveZeroScoringTurns = 0;
+
+        /*
+         * Generate the mainModel and viewModel Arraylists.
+         */
+        mainModel = forEachBoardSquareAsNestedList((r, c) -> ' ');
+        viewModel = forEachBoardSquareAsNestedList((r, c) -> new Text(" "));
+        elementsToSwap = new ArrayList<>();
 
         /* Create (and initialize, if needed) initial data structures housing board information. */
         changed_tile_coordinates = new ArrayList<>();
-        crossCheckSets = new HashSet[15][15];
-        IntStream.range(0, 15).forEach(i -> IntStream.range(0, 15).forEach(j -> {
-            crossCheckSets[i][j] = new HashSet<>();
-        }));
-
-        computeCrossCheckSets(0, 15, 0, 15);
+        verticalCrossCheckSetsForModel = new HashSet[15][15];
+        horizontalCrossCheckSetsForModelTranspose = new HashSet[15][15];
+        forEachBoardSquareAsList((i, j) -> {
+            verticalCrossCheckSetsForModel[i][j] = new HashSet<>();
+            horizontalCrossCheckSetsForModelTranspose[j][i] = new HashSet<>();
+            verticalCrossCheckSetsForModel[i][j].addAll(forEachAtoZ(c -> c));
+            horizontalCrossCheckSetsForModelTranspose[j][i].addAll(forEachAtoZ(c -> c));
+            return null;
+        });
 
         /*
          * Initialize the bindings to the view-model (view's understanding of board) data structure
@@ -127,20 +163,29 @@ public class Controller implements Initializable {
                     final int col = gridPane.getColumnIndex(child);
                     board_cells[row][col] = (StackPane) child;
 
-                    ((StackPane) child).getChildren().
-                            filtered((grandchild)-> grandchild instanceof Text)
-                            .forEach((grandchild) ->
-                                viewModel[row][col] = (Text) grandchild
-                    );
+                    // Make sure the view model is represented by the stack panes.
+                    FilteredList<Node> l = ((StackPane) child).getChildren().
+                            filtered((grandchild)-> grandchild instanceof Text);
+
+                    if (l.isEmpty())
+                    {
+                        ((StackPane) child).getChildren().add(viewModel.get(row).get(col));
+                    }
+                    else
+                    {
+                        viewModel.get(row).set(col, (Text) l.get(0));
+                    }
 
                     child.setOnDragOver((event) -> {
                         /* accept it only if it is  not dragged from the same node
                          * and if it has a string data. also, ensure that
                           * the board cell can actually receive this tile */
-                        if (event.getGestureSource() != child &&
+                        Text viewModelText = viewModel.get(row).get(col);
+                        if (!isSwapping &&
+                                event.getGestureSource() != child &&
                                 event.getDragboard().hasString() &&
-                                (viewModel[row][col] == null ||
-                                 viewModel[row][col].getText().length() != 1)) {
+                                (viewModelText.getText().length() == 2 ||
+                                 viewModelText.getText().charAt(0) == ' ')) {
                             event.acceptTransferModes(TransferMode.MOVE);
                         }
 
@@ -150,10 +195,12 @@ public class Controller implements Initializable {
                     child.setOnDragEntered((event) -> {
                         /* the drag-and-drop gesture entered the target */
                         /* show to the user that it is an actual gesture target */
-                        if (event.getGestureSource() != child &&
+                        Text viewModelText = viewModel.get(row).get(col);
+                        if (!isSwapping &&
+                                event.getGestureSource() != child &&
                                 event.getDragboard().hasString() &&
-                                (viewModel[row][col] == null ||
-                                        viewModel[row][col].getText().length() != 1)) {
+                                (viewModelText.getText().length() == 2 ||
+                                        viewModelText.getText().charAt(0) == ' ')) {
                             child.setStyle("-fx-border-color: darkblue; -fx-border-width: 3;");
                         }
 
@@ -173,35 +220,37 @@ public class Controller implements Initializable {
                         boolean success = false;
                         if (db.hasString()) {
                             // Creates the text element in the view model at that position if it doesn't exist.
-                            if (viewModel[row][col] == null)
-                            {
-                                viewModel[row][col] = new Text(db.getString());
-                                ((StackPane)child).getChildren().add(viewModel[row][col]);
-                            }
-                            else
-                            {
-                                /*
-                                 * Change the text color of the pane to Black if needed.
-                                 * This is to ensure that special squares are distinct from played tiles.
-                                 */
-                                viewModel[row][col].getStyleClass().add("black-text");
-                            }
-                            viewModel[row][col].setText(db.getString());
+
+                            /*
+                             * Change the text color of the pane to Black if needed.
+                             * This is to ensure that special squares are distinct from played tiles.
+                             */
+                            viewModel.get(row).get(col).getStyleClass().add("black-text");
+
+                            System.out.println(db.getString());
+                            viewModel.get(row).get(col).setText(db.getString());
+
+                            // Remove from hand
+                            playerHandHBox.getChildren().stream()
+                                    .filter((c) ->
+                                         ((Text)((StackPane)c).getChildren().get(0)).getText().equals(db.getString())
+                                    ).findFirst().ifPresent((c) ->
+                                        playerHandHBox.getChildren().remove(c)
+                                    );
+
                             success = true;
-                            // work-around for javafx edge case
-                            wasDropSuccessful = true;
+                            child.getStyleClass().add("played-tile");
                         }
                         /* let the source know whether the string was successfully
                          * transferred and used */
                         event.setDropCompleted(success);
                         changed_tile_coordinates.add(new Pair<>(row, col));
-
                         event.consume();
                 });
         });
 
         // Prepare to distribute tiles to players.
-        tilesRemaining = TileHelper.getTileBagForGame();
+        tilesRemaining = getTileBagForGame();
         playerHand = new ArrayList<>();
         cpuHand = new ArrayList<>();
 
@@ -219,24 +268,24 @@ public class Controller implements Initializable {
      */
     public void recallTiles()
     {
-        changed_tile_coordinates.forEach( pair ->
-        {
-            int i = pair.getKey();
-            int j = pair.getValue();
-            addTileToUserHand(viewModel[i][j].getText().charAt(0));
+        forEachProvidedSquareAsList((i, j) -> {
+            addTileToUserHand(viewModel.get(i).get(j).getText().charAt(0));
+            board_cells[i][j].getStyleClass().removeAll("played-tile");
 
             // Reset the view model's text in accordance with whether it's a special tile.
             if (board_cells[i][j].getStyleClass().size() > 0)
             {
                 String specialText = board_cells[i][j].getStyleClass().get(0).substring(0, 2);
-                viewModel[i][j].setText(specialText);
-                viewModel[i][j].getStyleClass().remove("black-text");
+                viewModel.get(i).get(j).setText(specialText);
+                viewModel.get(i).get(j).getStyleClass().remove("black-text");
             }
             else
             {
-                viewModel[i][j].setText("");
+                viewModel.get(i).get(j).setText(" ");
             }
-        });
+            return null;
+        }, changed_tile_coordinates);
+
         changed_tile_coordinates.clear();
     }
 
@@ -255,6 +304,32 @@ public class Controller implements Initializable {
         s.getChildren().add(new Text(letter + ""));
         playerHandHBox.getChildren().add(s);
 
+        s.setOnMouseClicked((e) -> {
+            if (isSwapping)
+            {
+                // First, check if this tile is already in the to-swap list.
+                if (elementsToSwap.contains(s))
+                {
+                    // If it does, remove it from that list.
+                    elementsToSwap.remove(s);
+
+                    s.getStyleClass().removeAll("selected-for-swap");
+
+                    // If doing so sets the list size to 0, disable the ready button.
+                    if (elementsToSwap.size() == 0)
+                    {
+                        swapTilesButton.setDisable(true);
+                    }
+                }
+                else
+                {
+                    elementsToSwap.add(s);
+                    swapTilesButton.setDisable(false);
+                    s.getStyleClass().add("selected-for-swap");
+                }
+            }
+        });
+
         // Mark the user's tiles as valid sources for a drag n' drop motion.
         s.setOnDragDetected((event) -> {
             /* drag was detected, start drag-and-drop gesture*/
@@ -270,10 +345,6 @@ public class Controller implements Initializable {
 
         s.setOnDragDone((event) -> {
             /* if the data was successfully moved, clear it */
-            if (event.getTransferMode() == TransferMode.MOVE && wasDropSuccessful) {
-                playerHandHBox.getChildren().remove(s);
-                wasDropSuccessful = false;
-            }
             event.consume();
         });
     }
@@ -283,17 +354,19 @@ public class Controller implements Initializable {
      */
     public void attemptPlayerMove()
     {
-        if (isValidMove())
+        List<List<Character>> textInViewModel = forEachBoardSquareAsNestedList((r, c) ->
+                viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' ');
+
+        if (isValidMove(textInViewModel, changed_tile_coordinates))
         {
             statusMessage.setText("Your move has been registered.");
             statusMessage.getStyleClass().clear();
             statusMessage.getStyleClass().add("success-text");
-            isFirstTurn = false;
             makePlayerMove();
         }
         else
         {
-            statusMessage.setText("That didn't work out so well.");
+            statusMessage.setText("Not a valid play.");
             statusMessage.getStyleClass().clear();
             statusMessage.getStyleClass().add("error-text");
         }
@@ -303,166 +376,191 @@ public class Controller implements Initializable {
      * Checks if the viewModel is consistent with a valid move.
      * @return if the player move was valid
      */
-    private boolean isValidMove()
+    private boolean isValidMove(List<List<Character>> board, List<Pair<Integer, Integer>> changed_tile_coordinates)
     {
-        boolean valid = true;
+        if (changed_tile_coordinates.size() == 0)
+        {
+            return false;
+        }
+
 
         // Determine if the play is vertical or horizontal.
         boolean playWasHorizontal = changed_tile_coordinates.stream()
-                .filter(x -> !x.getKey().equals(changed_tile_coordinates.get(0).getKey())).count() == 0;
+                .allMatch(x -> x.getKey().equals(changed_tile_coordinates.get(0).getKey()));
 
         boolean playWasVertical = changed_tile_coordinates.stream()
-                .filter(x -> !x.getValue().equals(changed_tile_coordinates.get(0).getValue())).count() == 0;
+                .allMatch(x -> x.getValue().equals(changed_tile_coordinates.get(0).getValue()));
 
-        valid = valid && (playWasVertical || playWasHorizontal);
+        boolean valid = (playWasVertical || playWasHorizontal);
 
-        System.out.println("Checkpt 1: valid? " + valid);
+//        System.out.println("Checkpt 1: valid? " + valid);
         if (playWasVertical){
-            valid = valid && partOfValidVerticalWord(changed_tile_coordinates.get(0));
+            int col = changed_tile_coordinates.get(0).getValue();
+            valid = valid && validVerticalPlay(board, changed_tile_coordinates);
 
             // Ensure that the word is indeed connected vertically (and is not just two disjoint words in the same col)
             int min_row_ind = changed_tile_coordinates.stream().map(Pair::getKey).reduce((x, y) -> x < y ? x : y).get();
             int max_row_ind = changed_tile_coordinates.stream().map(Pair::getKey).reduce((x, y) -> x > y ? x : y).get();
 
             valid = valid && IntStream.rangeClosed(min_row_ind, max_row_ind)
-                    .mapToObj(
-                        i -> viewModel[i][changed_tile_coordinates.get(0).getValue()] != null
-                            && viewModel[i][changed_tile_coordinates.get(0).getValue()].getText().length() == 1)
-                    .reduce((x, y) -> x && y).get();
-
-            // Ensure that each letter contributes to a horizontal word correctly.
-            valid = valid && changed_tile_coordinates.stream().
-                    map(this::partOfValidHorizontalWord).reduce((x, y) -> x && y).get();
-
+                    .allMatch(i -> board.get(i).get(col) != ' ');
         }
         else
         {
-            valid = valid && partOfValidHorizontalWord(changed_tile_coordinates.get(0));
+            valid = valid && validHorizontalPlay(board, changed_tile_coordinates);
+            int row = changed_tile_coordinates.get(0).getKey();
 
             // Ensure that the word is indeed connected horizontally (and is not just two disjoint words in the same row)
             int min_col_ind = changed_tile_coordinates.stream().map(Pair::getValue).reduce((x, y) -> x < y ? x : y).get();
             int max_col_ind = changed_tile_coordinates.stream().map(Pair::getValue).reduce((x, y) -> x > y ? x : y).get();
             valid = valid && IntStream.rangeClosed(min_col_ind, max_col_ind)
-                    .mapToObj(
-                        j -> viewModel[changed_tile_coordinates.get(0).getKey()][j] != null
-                            && viewModel[changed_tile_coordinates.get(0).getKey()][j].getText().length() == 1)
-                    .reduce((x, y) -> x && y).get();
-
-            // Ensure that each letter contributes to a vertical word correctly.
-            valid = valid && changed_tile_coordinates.stream().
-                    map(this::partOfValidVerticalWord).reduce((x, y) -> x && y).get();
+                    .allMatch(j -> board.get(row).get(j) != ' ');
         }
 
-        System.out.println("Checkpt 2: valid? " + valid);
+//        System.out.println("Checkpt 2: valid? " + valid);
 
         if (isFirstTurn)
         {
             valid = valid
-                    && changed_tile_coordinates.indexOf(new Pair(7, 7)) != -1
+                    && changed_tile_coordinates.indexOf(new Pair<>(7, 7)) != -1
                     && changed_tile_coordinates.size() >= 2;
         }
         else
         {
             // All subsequent turns must consist of a play that is vertically or horizontally adjacent to at
             // least one other letter of a word that existed before this turn.
-            valid = valid && changed_tile_coordinates.stream().filter(x -> {
-                int r = x.getKey();
-                int c = x.getValue();
-                return (r > 0 && mainModel[r-1][c] != '\0')
-                        || (r < 14 && mainModel[r+1][c] != '\0')
-                        || (c > 0 && mainModel[r][c-1] != '\0')
-                        || (c < 14 && mainModel[r][c+1] != '\0');
-            }).count() > 0;
+            valid = valid && changed_tile_coordinates.stream().anyMatch(
+                    (p) -> {
+                        int r = p.getKey();
+                        int c = p.getValue();
+                        return (r > 0 && mainModel.get(r-1).get(c) != ' ')
+                                || (r < 14 && mainModel.get(r+1).get(c) != ' ')
+                                || (c > 0 && mainModel.get(r).get(c-1) != ' ')
+                                || (c < 14 && mainModel.get(r).get(c+1) != ' ');
+                    });
+
         }
-        System.out.println("Checkpt 3: valid? " + valid);
+//        System.out.println("Checkpt 3: valid? " + valid);
 
         return valid;
-
     }
 
     /**
-     * Builds the vertical word in which the letter at the provided coordinate in the ViewModel participates.
-     * @param pair
+     * Builds the vertical word in which the letter at the provided coordinate in the provided model
+     * If the provided coordinate is empty, returns the prefix to the word that would exist if a tile were placed there.
+     *
+     * @param board the model to use for construction of the word
+     * @param pair coordinate
      * @return the word itself, as well as the starting index of the word
      */
-    private Pair<String, Integer> buildVerticalWordForCoordinate(Pair<Integer, Integer> pair)
+    private static Pair<String, Integer> buildVerticalWordForCoordinate(List<List<Character>> board, Pair<Integer, Integer> pair)
     {
         StringBuilder sb = new StringBuilder();
         int row = pair.getKey();
         int col = pair.getValue();
 
-        OptionalInt top_exclusive = IntStream.iterate(row, i -> i - 1)
-                .limit(row + 1)
-                .filter(r -> !(viewModel[r][col] != null && viewModel[r][col].getText().length() == 1))
+        OptionalInt top_exclusive = IntStream.iterate(row - 1, i -> i - 1)
+                .limit(row)
+                .filter(r -> board.get(r).get(col) == ' ')
                 .findFirst();
-        OptionalInt bot_exclusive = IntStream.range(row + 1, 15)
-                .filter(r -> !(viewModel[r][col] != null && viewModel[r][col].getText().length() == 1))
+        OptionalInt bot_exclusive = IntStream.range(row, 15)
+                .filter(r -> board.get(r).get(col) == ' ')
                 .findFirst();
         int top_exc = top_exclusive.isPresent() ? top_exclusive.getAsInt(): -1;
         int bot_exc = bot_exclusive.isPresent() ? bot_exclusive.getAsInt(): 15;
-        Boolean endOfWordSeen = false;
         IntStream.range(top_exc + 1, bot_exc)
                 .forEach(r ->
-                        sb.append(viewModel[r][col].getText().charAt(0))
+                        sb.append(board.get(r).get(col))
                 );
 
-        return new Pair<>(sb.toString(), top_exc + 1);
+        return new Pair<>(sb.length() > 0 ? sb.toString() : "", top_exc + 1);
     }
 
     /**
-     * Builds the horizontal word in which the letter at the provided coordinate in the ViewModel participates.
-     * @param pair
+     * Builds the vertical word in which the letter at the provided coordinate in the provided model
+     * If the provided coordinate is empty, returns the prefix to the word that would exist if a tile were placed there.
+     *
+     * @param board the model to use for construction of the word
+     * @param pair coordinate
      * @return the word itself, as well as the starting index of the word
      */
-    private Pair<String, Integer> buildHorizontalWordForCoordinate(Pair<Integer, Integer> pair)
+    private static Pair<String, Integer> buildHorizontalWordForCoordinate(List<List<Character>> board, Pair<Integer, Integer> pair)
     {
         StringBuilder sb = new StringBuilder();
         int row = pair.getKey();
         int col = pair.getValue();
 
-        OptionalInt left_exclusive = IntStream.iterate(col, i -> i - 1)
-                .limit(col + 1)
-                .filter(c -> !(viewModel[row][c] != null && viewModel[row][c].getText().length() == 1))
+        OptionalInt top_exclusive = IntStream.iterate(col - 1, c -> c - 1)
+                .limit(col)
+                .filter(c -> board.get(row).get(c) == ' ')
                 .findFirst();
-        OptionalInt right_exclusive = IntStream.range(col + 1, 15)
-                .filter(c -> !(viewModel[row][c] != null && viewModel[row][c].getText().length() == 1))
+        OptionalInt bot_exclusive = IntStream.range(col, 15)
+                .filter(c -> board.get(row).get(c) == ' ')
                 .findFirst();
-        int left_exc = left_exclusive.isPresent() ? left_exclusive.getAsInt(): -1;
-        int right_exc = right_exclusive.isPresent() ? right_exclusive.getAsInt(): 15;
-        Boolean endOfWordSeen = false;
+        int left_exc = top_exclusive.isPresent() ? top_exclusive.getAsInt(): -1;
+        int right_exc = bot_exclusive.isPresent() ? bot_exclusive.getAsInt(): 15;
         IntStream.range(left_exc + 1, right_exc)
                 .forEach(c ->
-                        sb.append(viewModel[row][c].getText().charAt(0))
+                        sb.append(board.get(row).get(c))
                 );
 
-        return new Pair<>(sb.toString(), left_exc + 1);
+        return new Pair<>(sb.length() > 0 ? sb.toString() : "", left_exc + 1);
     }
 
     /**
      * Is the letter that is at location "pair" in the GUI part of a valid word in the vertical direction?
-     * @param pair an (x,y) coordinate in the GUI denoting a location of an inserted tile
+     * @param p an (x,y) coordinate in the GUI denoting a location of an inserted tile
      */
-    private boolean partOfValidVerticalWord(Pair<Integer, Integer> pair) {
-        String verticalWord = buildVerticalWordForCoordinate(pair).getKey();
+    private boolean validVerticalPlay(List<List<Character>> board, List<Pair<Integer, Integer>> changed_tile_coordinates) {
+        /*
+         * First, check if the vertical part constitutes a word.
+         */
+        String verticalWord = buildVerticalWordForCoordinate(board, changed_tile_coordinates.get(0)).getKey();
         // Now that we have the vertical word we've formed, let's see whether it is valid.
-        if (verticalWord.length() == 1)
-            return true;
-        TrieNode tn = trie.getNodeForPrefix(verticalWord.toLowerCase());
-        return (tn != null && tn.isWord());
+
+        TrieNode tn = trie.getNodeForPrefix(verticalWord);
+
+//        System.out.println("valid vertical word formed for " + verticalWord + " :" + (verticalWord.length() == 1 || (tn != null && tn.isWord())));
+//        changed_tile_coordinates.stream().forEach((pair)->{
+//            System.out.println(pair.toString() + " has horizontal cross check sets of " + horizontalCrossCheckSetsForModelTranspose[pair.getValue()][pair.getKey()]);
+//        });
+
+        /*
+         * Second, check if the horizontal words formed in a parallel play follow the cross sets.
+         */
+        return (verticalWord.length() == 1 || (tn != null && tn.isWord()))
+                && (changed_tile_coordinates.stream().allMatch((pair) ->
+                        horizontalCrossCheckSetsForModelTranspose[pair.getValue()][pair.getKey()]
+                                .contains(board.get(pair.getKey()).get(pair.getValue())))
+                 || isFirstTurn);
     }
 
     /**
      * Is the letter that is at location "pair" in the GUI part of a valid word in the vertical direction?
-     * @param pair an (x,y) coordinate in the GUI denoting a location of an inserted tile
+     * @param p an (x,y) coordinate in the GUI denoting a location of an inserted tile
      */
-    private boolean partOfValidHorizontalWord(Pair<Integer, Integer> pair) {
-        String horizontalWord = buildHorizontalWordForCoordinate(pair).getKey();
-
+    private boolean validHorizontalPlay(List<List<Character>> board, List<Pair<Integer, Integer>> changed_tile_coordinates) {
+        /*
+         * First, check if the vertical part constitutes a word.
+         */
+        String horizontalWord = buildHorizontalWordForCoordinate(board, changed_tile_coordinates.get(0)).getKey();
         // Now that we have the vertical word we've formed, let's see whether it is valid.
-        if (horizontalWord.length() == 1)
-            return true;
-        TrieNode tn = trie.getNodeForPrefix(horizontalWord.toLowerCase());
-        return (tn != null && tn.isWord());
+
+        TrieNode tn = trie.getNodeForPrefix(horizontalWord);
+
+        /*
+         * Second, check if the vertical words formed in a parallel play follow the cross sets.
+         */
+//        System.out.println("valid horizontal word formed for " + horizontalWord + " :" + (horizontalWord.length() == 1 || (tn != null && tn.isWord())));
+//        changed_tile_coordinates.stream().forEach((pair)->{
+//            System.out.println(pair.toString() + " has vertical cross check sets of " + verticalCrossCheckSetsForModel[pair.getKey()][pair.getValue()]);
+//        });
+
+        return (horizontalWord.length() == 1 || (tn != null && tn.isWord()))
+                && (changed_tile_coordinates.stream().
+                allMatch((pair) -> verticalCrossCheckSetsForModel[pair.getKey()][pair.getValue()]
+                                .contains(board.get(pair.getKey()).get(pair.getValue())))
+                || isFirstTurn);
     }
 
     /**
@@ -471,119 +569,426 @@ public class Controller implements Initializable {
      */
     private void makePlayerMove()
     {
-        System.out.println("Valid move");
+        playerConsecutiveZeroScoringTurns = 0;
+//        System.out.println("Valid move");
 
         // Step 1: increment player score
         // Determine if the play is vertical or horizontal.
         boolean playWasHorizontal = changed_tile_coordinates.stream()
-                .filter(x -> !x.getKey().equals(changed_tile_coordinates.get(0).getKey())).count() == 0;
+                .allMatch(x -> x.getKey().equals(changed_tile_coordinates.get(0).getKey()));
 
         int score = Integer.parseInt(playerScore.getText().split(":")[1]);
+        List<List<Character>> textInViewModel = forEachBoardSquareAsNestedList((r, c) ->
+                viewModel.get(r).get(c).getText().charAt(0));
+
         System.out.println("Player score is currently: " + score);
 
         if (!playWasHorizontal)
         {
-            score += scoreVertical(changed_tile_coordinates.get(0));
-            score += changed_tile_coordinates.stream().map(this::scoreHorizontal).reduce((x,y)->x+y).get();
+            score += scoreVertical(textInViewModel, changed_tile_coordinates.get(0));
+            score += changed_tile_coordinates.stream().map(x-> scoreHorizontal(textInViewModel, x)).reduce((x,y)->x+y).get();
         }
         else
         {
-            score += scoreHorizontal(changed_tile_coordinates.get(0));
-            score += changed_tile_coordinates.stream().map(this::scoreVertical).reduce((x,y)->x+y).get();
+            score += scoreHorizontal(textInViewModel, changed_tile_coordinates.get(0));
+            score += changed_tile_coordinates.stream().map(x -> scoreVertical(textInViewModel, x)).reduce((x,y)->x+y).get();
+        }
+        if (changed_tile_coordinates.size() == 7)
+        {
+            score += 50;
         }
 
         playerScore.setText("Player Score:" + score);
 
         // Step 2: propagate viewModel to model
-        changed_tile_coordinates.forEach(p -> {
-            int row = p.getKey();
-            int col = p.getValue();
-            mainModel[row][col] = viewModel[row][col].getText().charAt(0);
-        });
+        mainModel = forEachBoardSquareAsNestedList((r, c) ->
+            viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' '
+        );
 
+        for (int i = 0 ; i < 15; i++)
+        {
+            for (int j = 0 ; j < 15; j++)
+                System.out.print(mainModel.get(i).get(j));
+            System.out.println();
+        }
+
+        System.out.println("UHHHH");
 
         // Step 3: take as many tiles from the bag as you can (up to the number removed) and give them to the player
-        changed_tile_coordinates.forEach((x) -> {
-            playerHand.remove((Character)viewModel[x.getKey()][x.getValue()].getText().charAt(0));
+        forEachProvidedSquareAsList( (row, col) -> {
+            playerHand.remove((Character)viewModel.get(row).get(col).getText().charAt(0));
+            return tilesRemaining.poll();
+        }, changed_tile_coordinates).forEach((tile) -> {
+            if (tile != null)
+            {
+                playerHand.add(tile);
+                addTileToUserHand(tile);
+            }
+        });
+
+        isFirstTurn = false;
+        // Step 5: Recompute cross sets
+        List<List<Character>> transposeOfMainModel = forEachBoardSquareAsNestedList((r, c) -> mainModel.get(c).get(r));
+
+        computeCrossCheckSets(verticalCrossCheckSetsForModel, mainModel, getCoordinatesListForBoard());
+        computeCrossCheckSets(horizontalCrossCheckSetsForModelTranspose, transposeOfMainModel, getCoordinatesListForBoard());
+        // Step 6: clear changed_tiles list
+        changed_tile_coordinates.clear();
+
+//        BoardHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Vertical set for " + x.toString() + " : " + verticalCrossCheckSetsForModel[x.getKey()][x.getValue()]));
+//        BoardHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Horizontal set for " + x.toString() + " : " + horizontalCrossCheckSetsForModelTranspose[x.getValue()][x.getKey()]));
+
+        System.out.println("The CPU has in his hand : " + cpuHand.toString());
+        if (!gameOver(playerHand, playerConsecutiveZeroScoringTurns))
+        {
+            disablePlayerActions();
+            makeCPUMove();
+            enablePlayerActions();
+        }
+        else
+        {
+            cleanup();
+        }
+
+    }
+
+
+    /**
+     * Computes the VERTICAL cross check sets for a given model.
+     *
+     * To compute the horizontal cross check sets for that model,
+     * pass in horizontalCrossCheckSetsForTranspose, model transpose, and coordinates to update
+     * in accordance with transposed matrix.
+     *
+     * @param crossCheckSets
+     * @param model
+     * @param coordinates
+     */
+    private void computeCrossCheckSets(HashSet<Character>[][] crossCheckSets,
+                                       List<List<Character>> model,
+                                       List<Pair<Integer, Integer>> coordinates){
+        coordinates.stream().filter(pair -> model.get(pair.getKey()).get(pair.getValue()) == ' ').forEach((pair) -> {
+                int i = pair.getKey();
+                int j = pair.getValue();
+                crossCheckSets[i][j].clear();
+                Pair<String, Integer> verticalPrefixToThisSquare = buildVerticalWordForCoordinate(model, pair);
+                TrieNode prefixNode = trie.getNodeForPrefix(verticalPrefixToThisSquare.getKey());
+                if (prefixNode != null)
+                {
+                    StringBuilder verticalSuffixToThisSquare = new StringBuilder();
+                    OptionalInt bot_exclusive = IntStream.range(i + 1, 15)
+                            .filter(r-> model.get(r).get(j) == ' ')
+                            .findFirst();
+                    IntStream.range(i + 1, bot_exclusive.isPresent() ? bot_exclusive.getAsInt() : 15)
+                            .forEach(x -> {
+                               verticalSuffixToThisSquare.append(model.get(x).get(j));
+                            });
+
+                    prefixNode.getOutgoingEdges().keySet().forEach(c -> {
+                        if (prefixNode.getNodeForPrefix(c + verticalSuffixToThisSquare.toString(), 0) != null
+                                && prefixNode.getNodeForPrefix(c + verticalSuffixToThisSquare.toString(), 0).isWord()) {
+                            crossCheckSets[i][j].add(c);
+                        }
+                    });
+
+                    if (prefixNode == trie.root && verticalSuffixToThisSquare.toString().equals(""))
+                    {
+                        crossCheckSets[i][j].addAll(forEachAtoZ(c->c));
+
+                    }
+                }
+            });
+    }
+
+    private void makeCPUMove()
+    {
+        BiFunction<Integer, Integer, List<Pair<Integer, Integer>>> generateVerticalNeighbors = (r, c) -> {
+            List<Pair<Integer, Integer>> s = new ArrayList<>();
+            if (r > 0)
+            {
+                s.add(new Pair<>(r - 1, c));
+            }
+            if (r < 14)
+            {
+                s.add(new Pair<>(r + 1, c));
+            }
+            return s;
+        };
+        BiFunction<Integer, Integer, List<Pair<Integer, Integer>>> generateHorizontalNeighbors = (r, c) -> {
+            List<Pair<Integer, Integer>> s = new ArrayList<>();
+            if (c > 0)
+            {
+                s.add(new Pair<>(r, c - 1));
+            }
+            if (c < 14)
+            {
+                s.add(new Pair<>(r, c + 1));
+            }
+            return s;
+        };
+
+        Set<Pair<Integer, Integer>> anchorSquares;
+
+        if(!isFirstTurn){
+            anchorSquares = forEachBoardSquareAsList((r, c) -> {
+                boolean validAnchorSquare = (mainModel.get(r).get(c) == ' ');
+                List<Pair<Integer, Integer>> neighbors = generateVerticalNeighbors.apply(r, c);
+                neighbors.addAll(generateHorizontalNeighbors.apply(r, c));
+                validAnchorSquare = validAnchorSquare && neighbors.stream().anyMatch((pair) ->
+                        mainModel.get(pair.getKey()).get(pair.getValue()) != ' ');
+                if (validAnchorSquare)
+                    return new Pair<>(r,c);
+                return null;
+            }).stream().filter(Objects::nonNull).collect(Collectors.toSet());
+        }
+        else
+        {
+            anchorSquares = getCoordinatesListForBoard().stream().collect(Collectors.toSet());
+        }
+
+        List<List<Character>> copyOfMainModel = forEachBoardSquareAsNestedList((r, c) -> mainModel.get(r).get(c));
+        List<List<Character>> transposeOfMainModel = forEachBoardSquareAsNestedList((r, c) -> mainModel.get(c).get(r));
+
+        Set<Pair<Integer, Integer>> transposedAnchorSquares =
+                anchorSquares.stream().map(x -> new Pair<>(x.getValue(), x.getKey())).collect(Collectors.toSet());
+
+        System.out.println("anchors " + anchorSquares.toString());
+
+        statusMessage.getStyleClass().clear();
+        statusMessage.getStyleClass().add("success-text");
+        bestCPUPlay = new Pair<>(null, new Pair<>("", Integer.MIN_VALUE));
+
+        anchorSquares.forEach(square -> computeBestHorizontalPlayAtAnchor(copyOfMainModel, anchorSquares, square, verticalCrossCheckSetsForModel, false));
+        transposedAnchorSquares.forEach(square -> computeBestHorizontalPlayAtAnchor(transposeOfMainModel, transposedAnchorSquares, square, horizontalCrossCheckSetsForModelTranspose, true));
+        ArrayList<Pair<Integer, Integer>> newSquaresPlacedLocations = new ArrayList<>();
+
+        List<List<Character>> bestScoringBoard = bestCPUPlay.getKey();
+
+        // Reset the default colors of text on the board
+        forEachBoardSquareAsList((r, c) -> {
+           if (mainModel.get(r).get(c) != ' ')
+           {
+               viewModel.get(r).get(c).getStyleClass().removeAll("bold-text");
+               viewModel.get(r).get(c).getStyleClass().add("black-text");
+           }
+           return null;
+        });
+
+        if (bestScoringBoard != null)
+        {
+            cpuConsecutiveZeroScoringTurns = 0;
+            mainModel = forEachBoardSquareAsNestedList((r, c) -> {
+                // Side effects on the View Model
+                if (bestScoringBoard.get(r).get(c) != mainModel.get(r).get(c))
+                {
+                    viewModel.get(r).get(c).setText(bestScoringBoard.get(r).get(c) + "");
+                    viewModel.get(r).get(c).getStyleClass().add("bold-text");
+                    board_cells[r][c].getStyleClass().add("played-tile");
+                }
+                cpuHand.remove((Character)bestScoringBoard.get(r).get(c));
+                return bestScoringBoard.get(r).get(c);
+            });
+        }
+        else
+        {
+            cpuConsecutiveZeroScoringTurns++;
+//            System.out.println("Could not find anything to play with these characters");
+            if (tilesRemaining.size() >= 7)
+            {
+                // Attempt swap by dumping all cpu tiles into bag, and then randomly redrawing 7.
+                tilesRemaining.addAll(cpuHand);
+                List<Character> shuffledTiles = new ArrayList<>(tilesRemaining);
+                Collections.shuffle(shuffledTiles);
+                tilesRemaining.clear();
+                tilesRemaining.addAll(shuffledTiles);
+                cpuHand.clear();
+                IntStream.range(0, 7).forEach(i -> cpuHand.add(tilesRemaining.poll()));
+                statusMessage.setText("CPU swapped some tiles.");
+            }
+            else
+            {
+                statusMessage.setText("CPU passed the turn.");
+            }
+            if (gameOver(cpuHand, cpuConsecutiveZeroScoringTurns))
+            {
+                cleanup();
+            }
+            return;
+        }
+
+        List<List<Character>> transposeOfUpdatedModel = forEachBoardSquareAsNestedList((r, c) -> mainModel.get(c).get(r));
+        computeCrossCheckSets(verticalCrossCheckSetsForModel, mainModel, getCoordinatesListForBoard());
+        computeCrossCheckSets(horizontalCrossCheckSetsForModelTranspose, transposeOfUpdatedModel, getCoordinatesListForBoard());
+        int score = Integer.parseInt(cpuScore.getText().split(":")[1]);
+        score += bestCPUPlay.getValue().getValue();
+        cpuScore.setText("CPU Score:" + score);
+        statusMessage.setText("CPU played " + bestCPUPlay.getValue().getKey() + " for " + bestCPUPlay.getValue().getValue() + " points.");
+        for (int k = cpuHand.size(); k < 7; k++)
+        {
             Character c = tilesRemaining.poll();
             if (c != null)
             {
-                playerHand.add(c);
-                addTileToUserHand(c);
+                cpuHand.add(c);
             }
-        });
-        // Step 5: clear changed_tiles list
-        changed_tile_coordinates.clear();
-
-        // TODO Step 6: let CPU make its move
-
+        }
+        isFirstTurn = false;
+        if (gameOver(cpuHand, cpuConsecutiveZeroScoringTurns))
+        {
+            cleanup();
+        }
     }
+
 
     /**
      *
-     * @param pair
-     * @return score
+     * @param board the model to use for recursive backtracking
+     * @param square anchor square
+     * @param verticalCrossCheckSets vertical cross checks
+     * @return (horizontal string, leftmost position, score)
      */
-    private int scoreHorizontal(Pair<Integer, Integer> pair) {
-
-        int row = pair.getKey();
-        int col = pair.getValue();
-
-        Pair<String, Integer> p = buildHorizontalWordForCoordinate(pair);
-        int start_index = p.getValue();
-        int length = p.getKey().length();
-
-        // If there is no word (of 2 or more letters) formed, return 0 immediately.
-        if (length == 1)
+    private void computeBestHorizontalPlayAtAnchor(List<List<Character>> board, Set<Pair<Integer, Integer>> anchors, Pair<Integer, Integer> square, HashSet<Character>[][] verticalCrossCheckSets, boolean transposed) {
+        int col = square.getValue();
+        OptionalInt left_exclusive = IntStream.iterate(col - 1, i -> i - 1)
+                .limit(col)
+                .filter(c -> board.get(square.getKey()).get(c) != ' ' || anchors.contains(new Pair<>(square.getKey(), c)))
+                .findFirst();
+        int k = left_exclusive.isPresent() ? col - left_exclusive.getAsInt() - 1: col;
+        if (k == 0)
         {
-            return 0;
+            if (col == 0)
+            {
+                ExtendRight(board, square, "", cpuHand, trie.root, verticalCrossCheckSets, transposed);
+            }
+            else if (board.get(square.getKey()).get(col - 1) != ' ')
+            {
+                String prefix = buildHorizontalWordForCoordinate(board, new Pair<>(square.getKey(), col - 1)).getKey();
+                ExtendRight(board, square, prefix, cpuHand, trie.getNodeForPrefix(prefix), verticalCrossCheckSets, transposed);
+            }
         }
 
-        Pair<Integer, Pair<Integer, Integer>> wordScoreTuple =
-        IntStream.range(start_index, start_index + length)
-                .mapToObj(c -> c)
-                .reduce(new Pair<>(0, new Pair<>(0, 0)),
-                    (acc, c) -> {
-                        int partialScore = acc.getKey();
-                        int dw_count = acc.getValue().getKey();
-                        int tw_count = acc.getValue().getValue();
-                        int letterScore = TileHelper.scoreCharacter(viewModel[row][c].getText().charAt(0));
-                        if (board_cells[row][c].getStyleClass().size() > 0 && mainModel[row][c] == '\0') {
-                            switch (board_cells[row][c].getStyleClass().get(0).substring(0, 2)) {
-                                case "DW":
-                                    dw_count++;
-                                    break;
-                                case "TW":
-                                    tw_count++;
-                                    break;
-                                case "DL":
-                                    letterScore *= 2;
-                                    break;
-                                case "TL":
-                                    letterScore *= 3;
-                                    break;
-                            }
-                        }
-                        return new Pair<>(partialScore + letterScore, new Pair<>(dw_count, tw_count));
-                    }
-                , (pairA, pairB) ->
-                    new Pair<>(pairA.getKey() + pairB.getKey(),
-                            new Pair<>(pairA.getValue().getKey() + pairB.getValue().getKey(),
-                                    pairA.getValue().getValue() + pairB.getValue().getValue()))
-                    );
-
-        int baseScore = wordScoreTuple.getKey();
-        int dw_count = wordScoreTuple.getValue().getKey();
-        int tw_count = wordScoreTuple.getValue().getValue();
-
-        return (int) (baseScore * Math.pow(2, dw_count) * Math.pow(3, tw_count));
+        LeftPart(board, square,"", cpuHand, trie.root, verticalCrossCheckSets, k, k, transposed);
     }
 
-    private int scoreVertical(Pair<Integer, Integer> pair) {
+    private void LeftPart(List<List<Character>> board, Pair<Integer,Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, int limit, int maxLimit, boolean transposed)
+    {
+//        for (int i = 0 ; i < 15 ; i++) {
+//            for (int j = 0; j< 15; j++)
+//            {
+//                System.out.print(board[i][j]);
+//            }
+//            System.out.println();
+//        }
+        ExtendRight(board, square, partialWord, tilesRemainingInRack, N, crossCheckSets, transposed);
+        if (limit > 0)
+        {
+            N.getOutgoingEdges().keySet().forEach(c -> {
+                if (tilesRemainingInRack.contains((Character)c))
+                {
+                    for (int i = square.getValue() - maxLimit; i < square.getValue(); i++)
+                    {
+                        board.get(square.getKey()).set(i, board.get(square.getKey()).get(i + 1));
+                    }
+                    board.get(square.getKey()).set(square.getValue() - 1, c);
+                    tilesRemainingInRack.remove((Character)c);
+                    LeftPart(board, square, partialWord + c, tilesRemainingInRack, N.getOutgoingEdges().get(c), crossCheckSets, limit - 1, maxLimit, transposed);
+                    tilesRemainingInRack.add(c);
+                    for (int i = square.getValue() - 1; i > square.getValue() - maxLimit; i--)
+                    {
+                        board.get(square.getKey()).set(i, board.get(square.getKey()).get(i - 1));
+                    }
+                    board.get(square.getKey()).set(square.getValue() - maxLimit,' ');
+                }
+            });
+        }
+    }
+
+    private void ExtendRight(List<List<Character>> board, Pair<Integer, Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, boolean transposed)
+    {
+//        for (int i = 0 ; i < 15 ; i++) {
+//            for (int j = 0; j< 15; j++)
+//            {
+//                System.out.print(board[i][j]);
+//            }
+//            System.out.println();
+//        }
+        if (square.getValue() >= 15)
+            return;
+        if (board.get(square.getKey()).get(square.getValue()) == ' ')
+        {
+            if (N.isWord())
+            {
+                LegalMove(board, partialWord, transposed);
+            }
+            N.getOutgoingEdges().keySet().forEach(c -> {
+                if (tilesRemainingInRack.contains(c) && crossCheckSets[square.getKey()][square.getValue()].contains(c))
+                {
+                    tilesRemainingInRack.remove((Character)c);
+                    board.get(square.getKey()).set(square.getValue(), c);
+                    ExtendRight(board, new Pair<>(square.getKey(), square.getValue() + 1), partialWord + c, tilesRemainingInRack, N.getOutgoingEdges().get(c), crossCheckSets, transposed);
+                    board.get(square.getKey()).set(square.getValue(), ' ');
+                    tilesRemainingInRack.add(c);
+                }
+            });
+        }
+        else
+        {
+            if (N.getOutgoingEdges().containsKey(board.get(square.getKey()).get(square.getValue())))
+            {
+                ExtendRight(board, new Pair<>(square.getKey(), square.getValue() + 1), partialWord + board.get(square.getKey()).get(square.getValue()), tilesRemainingInRack, N.getOutgoingEdges().get(board.get(square.getKey()).get(square.getValue())), crossCheckSets, transposed);
+            }
+        }
+    }
+
+    private void LegalMove(List<List<Character>> b, String partialWord, boolean transposed) {
+
+        List<List<Character>> board = transposed ? forEachBoardSquareAsNestedList((r, c) -> b.get(c).get(r)) : b;
+
+        // Get all pairs in which board differs from mainModel.
+        List<Pair<Integer, Integer>> changed_coords_by_cpu = getCoordinatesListForBoard().stream().filter(x -> {
+            int r = x.getKey();
+            int c = x.getValue();
+            return board.get(r).get(c) != mainModel.get(r).get(c);
+        }).collect(Collectors.toList());
+
+        if (!isValidMove(board, changed_coords_by_cpu))
+            return;
+
+        int score;
+        if (transposed)
+        {
+            score = scoreVertical(board, changed_coords_by_cpu.get(0));
+            score += changed_coords_by_cpu.stream().map(p -> scoreHorizontal(board, p)).reduce((x, y) -> x+y).get();
+        }
+        else
+        {
+            score = scoreHorizontal(board, changed_coords_by_cpu.get(0));
+            score += changed_coords_by_cpu.stream().map(p -> scoreVertical(board, p)).reduce((x, y) -> x+y).get();
+        }
+
+        if (changed_coords_by_cpu.size() == 7)
+        {
+            score += 50;
+        }
+
+        if (score > bestCPUPlay.getValue().getValue())
+        {
+            System.out.println("The word " + partialWord + " garnered " + score + " points for the CPU");
+            bestCPUPlay = new Pair<>(forEachBoardSquareAsNestedList((r, c) -> board.get(r).get(c)),
+                    new Pair<>(partialWord.concat(""), score));
+        }
+    }
+
+    /**
+     * You must invoke this function before propagating board --> mainModel. Likewise for scoreHorizontal.
+     * @param board
+     * @param pair
+     * @return
+     */
+    private int scoreVertical(List<List<Character>> board, Pair<Integer, Integer> pair) {
         int row = pair.getKey();
         int col = pair.getValue();
 
-        Pair<String, Integer> p = buildVerticalWordForCoordinate(pair);
+        Pair<String, Integer> p = buildVerticalWordForCoordinate(board, pair);
         int start_index = p.getValue();
         int length = p.getKey().length();
 
@@ -601,8 +1006,8 @@ public class Controller implements Initializable {
                                     int partialScore = acc.getKey();
                                     int dw_count = acc.getValue().getKey();
                                     int tw_count = acc.getValue().getValue();
-                                    int letterScore = TileHelper.scoreCharacter(viewModel[r][col].getText().charAt(0));
-                                    if (board_cells[r][col].getStyleClass().size() > 0 && mainModel[r][col] == '\0') {
+                                    int letterScore = scoreCharacter(board.get(r).get(col));
+                                    if (board_cells[r][col].getStyleClass().size() > 0 && mainModel.get(r).get(col) == ' ') {
                                         switch (board_cells[r][col].getStyleClass().get(0).substring(0, 2)) {
                                             case "DW":
                                                 dw_count++;
@@ -633,34 +1038,168 @@ public class Controller implements Initializable {
         return (int) (baseScore * Math.pow(2, dw_count) * Math.pow(3, tw_count));
     }
 
-    private void computeCrossCheckSets(int startRowInclusive, int endRowExclusive, int startColInclusive, int endColExclusive) {
-        IntStream.range(startRowInclusive, endRowExclusive).forEach(i -> {
-            IntStream.range(startColInclusive, endColExclusive).forEach(j -> {
-                crossCheckSets[i][j].clear();
-                StringBuilder verticalPrefixToThisSquare = new StringBuilder();
-                for (int h = 0; h < i; h++)
-                {
-                    if ((int) mainModel[h][j] != 0)
-                        verticalPrefixToThisSquare.append(mainModel[h][j]);
-                }
-                TrieNode prefixNode = trie.getNodeForPrefix(verticalPrefixToThisSquare.toString());
-                verticalPrefixToThisSquare.chars().forEach(x -> System.out.println(x));
-                if (prefixNode != null)
-                {
-                    StringBuilder verticalSuffixToThisSquare = new StringBuilder();
-                    for (int h = i + 1; h < 15; h++)
-                    {
-                        if((int) mainModel[h][j] != 0)
-                            verticalSuffixToThisSquare.append(mainModel[h][j]);
-                    }
-                    for (char c: prefixNode.getOutgoingEdges().keySet())
-                    {
-                        if (prefixNode.getNodeForPrefix(c + verticalSuffixToThisSquare.toString(), 0) != null) {
-                            crossCheckSets[i][j].add(c);
-                        }
-                    }
-                }
+    private int scoreHorizontal(List<List<Character>> board, Pair<Integer, Integer> pair) {
+
+        int row = pair.getKey();
+        int col = pair.getValue();
+
+        Pair<String, Integer> p = buildHorizontalWordForCoordinate(board, pair);
+        int start_index = p.getValue();
+        int length = p.getKey().length();
+
+        // If there is no word (of 2 or more letters) formed, return 0 immediately.
+        if (length == 1)
+        {
+            return 0;
+        }
+
+        Pair<Integer, Pair<Integer, Integer>> wordScoreTuple =
+                IntStream.range(start_index, start_index + length)
+                        .mapToObj(c -> c)
+                        .reduce(new Pair<>(0, new Pair<>(0, 0)),
+                                (acc, c) -> {
+                                    int partialScore = acc.getKey();
+                                    int dw_count = acc.getValue().getKey();
+                                    int tw_count = acc.getValue().getValue();
+                                    int letterScore = scoreCharacter(board.get(row).get(c));
+                                    if (board_cells[row][c].getStyleClass().size() > 0 && mainModel.get(row).get(c) == ' ') {
+                                        switch (board_cells[row][c].getStyleClass().get(0).substring(0, 2)) {
+                                            case "DW":
+                                                dw_count++;
+                                                break;
+                                            case "TW":
+                                                tw_count++;
+                                                break;
+                                            case "DL":
+                                                letterScore *= 2;
+                                                break;
+                                            case "TL":
+                                                letterScore *= 3;
+                                                break;
+                                        }
+                                    }
+                                    return new Pair<>(partialScore + letterScore, new Pair<>(dw_count, tw_count));
+                                }
+                                , (pairA, pairB) ->
+                                        new Pair<>(pairA.getKey() + pairB.getKey(),
+                                                new Pair<>(pairA.getValue().getKey() + pairB.getValue().getKey(),
+                                                        pairA.getValue().getValue() + pairB.getValue().getValue()))
+                        );
+
+        int baseScore = wordScoreTuple.getKey();
+        int dw_count = wordScoreTuple.getValue().getKey();
+        int tw_count = wordScoreTuple.getValue().getValue();
+
+        return (int) (baseScore * Math.pow(2, dw_count) * Math.pow(3, tw_count));
+    }
+
+    public void passTurn()
+    {
+        playerConsecutiveZeroScoringTurns++;
+        recallTiles();
+        if (!gameOver(playerHand, playerConsecutiveZeroScoringTurns))
+        {
+            disablePlayerActions();
+            makeCPUMove();
+            enablePlayerActions();
+        }
+        else
+        {
+            cleanup();
+        }
+    }
+
+    public void attemptSwap()
+    {
+        if (tilesRemaining.size() < 7)
+        {
+            statusMessage.setText("Cannot swap when fewer than 7 tiles remaining in bag.");
+            statusMessage.getStyleClass().clear();
+            statusMessage.getStyleClass().add("error-text");
+            return;
+        }
+        isSwapping = true;
+        disablePlayerActions();
+        recallTiles();
+        statusMessage.setText("Select the tiles to swap and hit ready, or hit back.");
+        swapTilesButton.setText("Ready");
+        recallButton.setText("Back");
+        recallButton.setOnAction((ev) -> {
+            recallButton.setText("Recall");
+            swapTilesButton.setText("Swap Tiles");
+            isSwapping = false;
+            elementsToSwap.forEach(s -> {
+               s.getStyleClass().removeAll("selected-for-swap");
             });
+            elementsToSwap.clear();
+            enablePlayerActions();
+            swapTilesButton.setOnAction((e) -> attemptSwap());
+            recallButton.setOnAction((e) -> recallTiles());
         });
+        swapTilesButton.setOnAction((ev) -> {
+            // Add new tiles from bag to player hand, prepare to add tiles discarded from player hand back to bag.
+            List<Character> returnToBag = elementsToSwap.stream().map((s) -> {
+                playerHandHBox.getChildren().remove(s);
+                char toRemove = (Character)(((Text)s.getChildren().get(0)).getText().charAt(0));
+                playerHand.remove((Character)toRemove);
+                char toAdd = tilesRemaining.poll();
+                playerHand.add(toAdd);
+                addTileToUserHand(toAdd);
+                return toRemove;
+            }).collect(Collectors.toList());
+            tilesRemaining.addAll(returnToBag);
+            List<Character> shuffledTiles = new ArrayList<>(tilesRemaining);
+            Collections.shuffle(shuffledTiles);
+            tilesRemaining.clear();
+            tilesRemaining.addAll(shuffledTiles);
+            elementsToSwap.clear();
+
+            recallButton.setText("Recall");
+            swapTilesButton.setText("Swap Tiles");
+            isSwapping = false;
+            swapTilesButton.setOnAction((e) -> attemptSwap());
+            recallButton.setOnAction((e) -> recallTiles());
+
+            playerConsecutiveZeroScoringTurns++;
+            if (!gameOver(playerHand, playerConsecutiveZeroScoringTurns))
+            {
+                makeCPUMove();
+                enablePlayerActions();
+            }
+            else
+            {
+                cleanup();
+            }
+        });
+    }
+
+    private void disablePlayerActions()
+    {
+        moveButton.setDisable(true);
+        passButton.setDisable(true);
+        swapTilesButton.setDisable(true);
+        if (!isSwapping)
+        {
+            recallButton.setDisable(true);
+        }
+    }
+
+    private void enablePlayerActions()
+    {
+        moveButton.setDisable(false);
+        passButton.setDisable(false);
+        swapTilesButton.setDisable(false);
+        recallButton.setDisable(false);
+    }
+
+    private boolean gameOver(List<Character> hand, int consecTurns)
+    {
+        return (hand.isEmpty()) || consecTurns == 3;
+
+    }
+
+    private void cleanup()
+    {
+        statusMessage.setText("Game over.");
     }
 }
