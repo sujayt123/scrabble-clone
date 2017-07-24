@@ -1244,13 +1244,13 @@ public class Controller implements Initializable {
         {
             statusMessage.getStyleClass().removeAll();
             statusMessage.getStyleClass().add("success-text");
-            statusMessage.setText("Congratulations! You won by " + pointDifferential + "points.");
+            statusMessage.setText("Congratulations! You won by " + pointDifferential + " points.");
         }
         else
         {
             statusMessage.getStyleClass().removeAll();
             statusMessage.getStyleClass().add("error-text");
-            statusMessage.setText("Oh no! You lost by " + pointDifferential + "points.");
+            statusMessage.setText("Oh no! You lost by " + pointDifferential + " points.");
         }
         disablePlayerActions();
         swapTilesButton.setDisable(false);
