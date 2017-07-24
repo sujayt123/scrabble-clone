@@ -9,6 +9,7 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
+import util.TileHelper;
 import util.Trie;
 import util.TrieNode;
 
@@ -109,9 +110,9 @@ public class Controller implements Initializable {
     /**
      * Flag to invoke additional logic checks if it's the first turn of gameplay.
      */
-    private boolean isFirstTurn = true;
+    private boolean isFirstTurn;
 
-    private Pair<List<List<Character>>, Pair<String, Integer>> bestCPUPlay = new Pair<>(null, new Pair<>(null, Integer.MAX_VALUE));
+    private Pair<List<List<Character>>, Pair<String, Integer>> bestCPUPlay;
 
     private List<StackPane> elementsToSwap;
 
@@ -131,6 +132,8 @@ public class Controller implements Initializable {
 
         cpuConsecutiveZeroScoringTurns = 0;
         playerConsecutiveZeroScoringTurns = 0;
+        isSwapping = false;
+        isFirstTurn = true;
 
         /*
          * Generate the mainModel and viewModel Arraylists.
@@ -185,7 +188,7 @@ public class Controller implements Initializable {
                                 event.getGestureSource() != child &&
                                 event.getDragboard().hasString() &&
                                 (viewModelText.getText().length() == 2 ||
-                                 viewModelText.getText().charAt(0) == ' ')) {
+                                        viewModelText.getText().charAt(0) == ' ')) {
                             event.acceptTransferModes(TransferMode.MOVE);
                         }
 
@@ -233,10 +236,10 @@ public class Controller implements Initializable {
                             // Remove from hand
                             playerHandHBox.getChildren().stream()
                                     .filter((c) ->
-                                         ((Text)((StackPane)c).getChildren().get(0)).getText().equals(db.getString())
+                                            ((Text)((StackPane)c).getChildren().get(0)).getText().equals(db.getString())
                                     ).findFirst().ifPresent((c) ->
-                                        playerHandHBox.getChildren().remove(c)
-                                    );
+                                    playerHandHBox.getChildren().remove(c)
+                            );
 
                             success = true;
                             child.getStyleClass().add("played-tile");
@@ -246,8 +249,8 @@ public class Controller implements Initializable {
                         event.setDropCompleted(success);
                         changed_tile_coordinates.add(new Pair<>(row, col));
                         event.consume();
+                    });
                 });
-        });
 
         // Prepare to distribute tiles to players.
         tilesRemaining = getTileBagForGame();
@@ -530,9 +533,9 @@ public class Controller implements Initializable {
          */
         return (verticalWord.length() == 1 || (tn != null && tn.isWord()))
                 && (changed_tile_coordinates.stream().allMatch((pair) ->
-                        horizontalCrossCheckSetsForModelTranspose[pair.getValue()][pair.getKey()]
-                                .contains(board.get(pair.getKey()).get(pair.getValue())))
-                 || isFirstTurn);
+                horizontalCrossCheckSetsForModelTranspose[pair.getValue()][pair.getKey()]
+                        .contains(board.get(pair.getKey()).get(pair.getValue())))
+                || isFirstTurn);
     }
 
     /**
@@ -559,7 +562,7 @@ public class Controller implements Initializable {
         return (horizontalWord.length() == 1 || (tn != null && tn.isWord()))
                 && (changed_tile_coordinates.stream().
                 allMatch((pair) -> verticalCrossCheckSetsForModel[pair.getKey()][pair.getValue()]
-                                .contains(board.get(pair.getKey()).get(pair.getValue())))
+                        .contains(board.get(pair.getKey()).get(pair.getValue())))
                 || isFirstTurn);
     }
 
@@ -602,7 +605,7 @@ public class Controller implements Initializable {
 
         // Step 2: propagate viewModel to model
         mainModel = forEachBoardSquareAsNestedList((r, c) ->
-            viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' '
+                viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' '
         );
 
         for (int i = 0 ; i < 15; i++)
@@ -668,36 +671,36 @@ public class Controller implements Initializable {
                                        List<List<Character>> model,
                                        List<Pair<Integer, Integer>> coordinates){
         coordinates.stream().filter(pair -> model.get(pair.getKey()).get(pair.getValue()) == ' ').forEach((pair) -> {
-                int i = pair.getKey();
-                int j = pair.getValue();
-                crossCheckSets[i][j].clear();
-                Pair<String, Integer> verticalPrefixToThisSquare = buildVerticalWordForCoordinate(model, pair);
-                TrieNode prefixNode = trie.getNodeForPrefix(verticalPrefixToThisSquare.getKey());
-                if (prefixNode != null)
-                {
-                    StringBuilder verticalSuffixToThisSquare = new StringBuilder();
-                    OptionalInt bot_exclusive = IntStream.range(i + 1, 15)
-                            .filter(r-> model.get(r).get(j) == ' ')
-                            .findFirst();
-                    IntStream.range(i + 1, bot_exclusive.isPresent() ? bot_exclusive.getAsInt() : 15)
-                            .forEach(x -> {
-                               verticalSuffixToThisSquare.append(model.get(x).get(j));
-                            });
+            int i = pair.getKey();
+            int j = pair.getValue();
+            crossCheckSets[i][j].clear();
+            Pair<String, Integer> verticalPrefixToThisSquare = buildVerticalWordForCoordinate(model, pair);
+            TrieNode prefixNode = trie.getNodeForPrefix(verticalPrefixToThisSquare.getKey());
+            if (prefixNode != null)
+            {
+                StringBuilder verticalSuffixToThisSquare = new StringBuilder();
+                OptionalInt bot_exclusive = IntStream.range(i + 1, 15)
+                        .filter(r-> model.get(r).get(j) == ' ')
+                        .findFirst();
+                IntStream.range(i + 1, bot_exclusive.isPresent() ? bot_exclusive.getAsInt() : 15)
+                        .forEach(x -> {
+                            verticalSuffixToThisSquare.append(model.get(x).get(j));
+                        });
 
-                    prefixNode.getOutgoingEdges().keySet().forEach(c -> {
-                        if (prefixNode.getNodeForPrefix(c + verticalSuffixToThisSquare.toString(), 0) != null
-                                && prefixNode.getNodeForPrefix(c + verticalSuffixToThisSquare.toString(), 0).isWord()) {
-                            crossCheckSets[i][j].add(c);
-                        }
-                    });
-
-                    if (prefixNode == trie.root && verticalSuffixToThisSquare.toString().equals(""))
-                    {
-                        crossCheckSets[i][j].addAll(forEachAtoZ(c->c));
-
+                prefixNode.getOutgoingEdges().keySet().forEach(c -> {
+                    if (prefixNode.getNodeForPrefix(c + verticalSuffixToThisSquare.toString(), 0) != null
+                            && prefixNode.getNodeForPrefix(c + verticalSuffixToThisSquare.toString(), 0).isWord()) {
+                        crossCheckSets[i][j].add(c);
                     }
+                });
+
+                if (prefixNode == trie.root && verticalSuffixToThisSquare.toString().equals(""))
+                {
+                    crossCheckSets[i][j].addAll(forEachAtoZ(c->c));
+
                 }
-            });
+            }
+        });
     }
 
     private void makeCPUMove()
@@ -766,12 +769,12 @@ public class Controller implements Initializable {
 
         // Reset the default colors of text on the board
         forEachBoardSquareAsList((r, c) -> {
-           if (mainModel.get(r).get(c) != ' ')
-           {
-               viewModel.get(r).get(c).getStyleClass().removeAll("bold-text");
-               viewModel.get(r).get(c).getStyleClass().add("black-text");
-           }
-           return null;
+            if (mainModel.get(r).get(c) != ' ')
+            {
+                viewModel.get(r).get(c).getStyleClass().removeAll("bold-text");
+                viewModel.get(r).get(c).getStyleClass().add("black-text");
+            }
+            return null;
         });
 
         if (bestScoringBoard != null)
@@ -1125,11 +1128,12 @@ public class Controller implements Initializable {
         swapTilesButton.setText("Ready");
         recallButton.setText("Back");
         recallButton.setOnAction((ev) -> {
+            statusMessage.setText("");
             recallButton.setText("Recall");
             swapTilesButton.setText("Swap Tiles");
             isSwapping = false;
             elementsToSwap.forEach(s -> {
-               s.getStyleClass().removeAll("selected-for-swap");
+                s.getStyleClass().removeAll("selected-for-swap");
             });
             elementsToSwap.clear();
             enablePlayerActions();
@@ -1201,5 +1205,80 @@ public class Controller implements Initializable {
     private void cleanup()
     {
         statusMessage.setText("Game over.");
+        boolean playerWon = playerHand.isEmpty() || (cpuConsecutiveZeroScoringTurns == 3);
+        int pScore = Integer.parseInt(this.playerScore.getText().split(":")[1]);
+        int aiScore = Integer.parseInt(this.cpuScore.getText().split(":")[1]);
+        // When the game is finished,
+        if (cpuConsecutiveZeroScoringTurns < 3 && playerConsecutiveZeroScoringTurns < 3)
+        {
+            if (playerWon)
+            {
+                pScore += 2 * cpuHand.stream().map(TileHelper::scoreCharacter).reduce((a, b) -> a + b).get();
+            }
+            else
+            {
+                aiScore += 2 * playerHand.stream().map(TileHelper::scoreCharacter).reduce((a, b) -> a + b).get();
+            }
+
+        }
+        playerScore.setText("Player Score:" + pScore);
+        cpuScore.setText("CPU Score:" + aiScore);
+
+        int pointDifferential = Math.abs(pScore - aiScore);
+        if (playerWon)
+        {
+            statusMessage.getStyleClass().removeAll();
+            statusMessage.getStyleClass().add("success-text");
+            statusMessage.setText("Congratulations! You won by " + pointDifferential + "points.");
+        }
+        else
+        {
+            statusMessage.getStyleClass().removeAll();
+            statusMessage.getStyleClass().add("error-text");
+            statusMessage.setText("Oh no! You lost by " + pointDifferential + "points.");
+        }
+        disablePlayerActions();
+        swapTilesButton.setDisable(false);
+        swapTilesButton.setText("Reset");
+        swapTilesButton.setOnAction((e) -> {
+            clearBoard();
+            initialize(null, null);
+            swapTilesButton.setText("Swap Tiles");
+            enablePlayerActions();
+        });
+    }
+
+    /**
+     * Resets the scrabble board.
+     */
+    private void clearBoard()
+    {
+        forEachBoardSquareAsList((r, c) -> {
+            // Clear all styles from the text.
+            viewModel.get(r).get(c).getStyleClass().removeAll(viewModel.get(r).get(c).getStyleClass().filtered(x->!x.contains("special")));
+            // Clear all styles from the stackpane EXCEPT for special tile classes.
+            board_cells[r][c].getStyleClass().removeAll(
+                    board_cells[r][c].getStyleClass().filtered(x -> !(x.contains("DW") || x.contains("TW") || x.contains("DL") || x.contains("TL")))
+            );
+            // Clear the actual text for all non-special tiles.
+            if (board_cells[r][c].getStyleClass().isEmpty())
+                viewModel.get(r).get(c).setText(" ");
+                // Replace the special tile text for the special tiles.
+            else if (board_cells[r][c].getStyleClass().get(0).contains("DW"))
+                viewModel.get(r).get(c).setText("DW");
+            else if (board_cells[r][c].getStyleClass().get(0).contains("TW"))
+                viewModel.get(r).get(c).setText("TW");
+            else if (board_cells[r][c].getStyleClass().get(0).contains("DL"))
+                viewModel.get(r).get(c).setText("DL");
+            else
+                viewModel.get(r).get(c).setText("TL");
+            return null;
+        });
+
+        playerHandHBox.getChildren().clear();
+        playerScore.setText("Player Score:0");
+        cpuScore.setText("CPU Score:0");
+        statusMessage.setText("");
+        statusMessage.getStyleClass().clear();
     }
 }
