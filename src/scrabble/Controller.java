@@ -597,7 +597,7 @@ public class Controller implements Initializable {
 
         int score = Integer.parseInt(playerScore.getText().split(":")[1]);
         List<List<Character>> textInViewModel = forEachBoardSquareAsNestedList((r, c) ->
-                viewModel.get(r).get(c).getText().charAt(0));
+                viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' ');
 
 //        System.out.println("Player score is currently: " + score);
 
@@ -1232,7 +1232,6 @@ public class Controller implements Initializable {
         }
         playerScore.setText("Player Score:" + pScore);
         cpuScore.setText("CPU Score:" + aiScore);
-
         int pointDifferential = Math.abs(pScore - aiScore);
         if (pScore > aiScore)
         {
