@@ -654,9 +654,7 @@ public class Controller implements Initializable {
 //        System.out.println("The CPU has in his hand : " + cpuHand.toString());
         if (!gameOver(playerHand, playerConsecutiveZeroScoringTurns))
         {
-            disablePlayerActions();
             makeCPUMove();
-            enablePlayerActions();
         }
         else
         {
