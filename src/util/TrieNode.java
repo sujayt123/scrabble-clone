@@ -4,15 +4,29 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * A node for a prefix tree.
+ *
  * Created by sujay on 7/21/17.
  */
 public class TrieNode {
 
+    /**
+     * The possible extensions that could be applied to the prefix representing this node
+     * to compose a valid word.
+     */
     private Map<Character, TrieNode> outgoingEdges;
-    public static int numberInsertions = 0;
+
+    /**
+     * A counter for debugging purposes. Not for client use.
+     */
+    private static int numberInsertions = 0;
+
+    /**
+     * Indicates whether the character in the Trie's root-child-child-...-this chain comprises a valid word.
+     */
     private boolean isWord;
 
-    public TrieNode(boolean isWord)
+    TrieNode(boolean isWord)
     {
         this.isWord = isWord;
         outgoingEdges = new HashMap<>();
@@ -42,7 +56,6 @@ public class TrieNode {
     }
 
     public TrieNode getNodeForPrefix(String s, int index) {
-//        System.out.println("Searching for " + s + " currently at index " + index);
         if (index == s.length())
         {
             return this;

@@ -20,10 +20,13 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
-import static util.BoardHelper.*;
+import static util.FunctionHelper.*;
 import static util.TileHelper.*;
+
+/**
+ * The controller for the Scrabble Game.
+ */
 
 public class Controller implements Initializable {
 
@@ -648,8 +651,8 @@ public class Controller implements Initializable {
         // Step 6: clear changed_tiles list
         changed_tile_coordinates.clear();
 
-//        BoardHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Vertical set for " + x.toString() + " : " + verticalCrossCheckSetsForModel[x.getKey()][x.getValue()]));
-//        BoardHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Horizontal set for " + x.toString() + " : " + horizontalCrossCheckSetsForModelTranspose[x.getValue()][x.getKey()]));
+//        FunctionHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Vertical set for " + x.toString() + " : " + verticalCrossCheckSetsForModel[x.getKey()][x.getValue()]));
+//        FunctionHelper.getCoordinatesListForBoard().forEach(x->System.out.println("Horizontal set for " + x.toString() + " : " + horizontalCrossCheckSetsForModelTranspose[x.getValue()][x.getKey()]));
 
 //        System.out.println("The CPU has in his hand : " + cpuHand.toString());
         if (!gameOver(playerHand, playerConsecutiveZeroScoringTurns))
