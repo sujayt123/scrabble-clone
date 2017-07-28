@@ -70,7 +70,7 @@ public class Quadruple<T, U, V, W> {
 
     /**
      * Sets the second element of this quadruple.
-     * @param b the first element
+     * @param b the second element
      */
     public void setB(U b) {
         this.b = b;
@@ -86,7 +86,7 @@ public class Quadruple<T, U, V, W> {
 
     /**
      * Sets the third element of this quadruple.
-     * @param c the first element
+     * @param c the third element
      */
     public void setC(V c) {
         this.c = c;

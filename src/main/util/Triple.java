@@ -63,7 +63,7 @@ public class Triple<T, U, V> {
 
     /**
      * Sets the second element of this triple.
-     * @param b the first element
+     * @param b the second element
      */
     public void setB(U b) {
         this.b = b;
@@ -79,7 +79,7 @@ public class Triple<T, U, V> {
 
     /**
      * Sets the third element of this triple.
-     * @param c the first element
+     * @param c the third element
      */
     public void setC(V c) {
         this.c = c;
