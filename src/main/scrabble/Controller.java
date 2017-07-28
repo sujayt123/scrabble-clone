@@ -1,8 +1,8 @@
-package scrabble;
+package main.scrabble;
 
-import API.AI;
-import API.Tile;
-import API.Trie;
+import main.API.AI;
+import main.API.Tile;
+import main.API.Trie;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.collections.transformation.FilteredList;
@@ -15,19 +15,18 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
-import util.FunctionHelper;
-import util.Quadruple;
+import main.util.FunctionHelper;
+import main.util.Quadruple;
 
 import java.net.URL;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static API.Board.scoreMove;
-import static API.Board.validMove;
-import static API.Tile.getTileBagForGame;
-import static util.FunctionHelper.*;
+import static main.API.Board.scoreMove;
+import static main.API.Board.validMove;
+import static main.API.Tile.getTileBagForGame;
+import static main.util.FunctionHelper.*;
 
 /**
  * The controller for the Scrabble Game.
@@ -101,7 +100,7 @@ public class Controller implements Initializable {
     private List<Character> playerHand, cpuHand;
 
     /**
-     * A prefix tree data structure to house the dictionary of scrabble words. See "util" for more information.
+     * A prefix tree data structure to house the dictionary of main.scrabble words. See "util" for more information.
      */
     private static Trie trie;
 
@@ -220,7 +219,6 @@ public class Controller implements Initializable {
                         event.consume();
                     });
 
-                    //TODO What should the board do when it receives a tile? Rigorously define the procedure
                     child.setOnDragDropped((event) -> {
                         /* if there is a string data on dragboard, read it and use it */
                         Dragboard db = event.getDragboard();
@@ -389,6 +387,7 @@ public class Controller implements Initializable {
      */
     private void makePlayerMove()
     {
+        playerConsecutiveZeroScoringTurns = 0;
 
         List<List<Character>> textInViewModel = forEachBoardSquareAsNestedList((r, c) ->
                 viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' ');
@@ -438,7 +437,7 @@ public class Controller implements Initializable {
         statusMessage.getStyleClass().add("success-text");
 
         Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Pair<String, Integer>>
-                cpuPlay = AI.CPUMove(new Quadruple<>(mainModel, cpuHand, tilesRemaining, trie));
+                cpuPlay = main.API.AI.CPUMove(new Quadruple<>(mainModel, cpuHand, tilesRemaining, trie));
 
         List<Pair<Integer, Integer>> changed_coordinates = FunctionHelper.getCoordinatesListForBoard().stream().filter(x -> {
             int r = x.getKey();
@@ -663,7 +662,7 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Resets the scrabble board.
+     * Resets the main.scrabble board.
      */
     private void clearBoard()
     {

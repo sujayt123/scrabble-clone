@@ -1,17 +1,15 @@
-package scrabble;
+package main.scrabble;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -169,7 +167,7 @@ public class HelpBox implements Initializable {
                                 + "\n\n"
                                 + "Once all tiles are gone from the bag and a single player has placed all of their tiles, the game will end and the player with the highest score wins."
                         );
-                        Text credits = new Text("\n\nAdapted from http://www.scrabblepages.com/scrabble/rules/\n\n");
+                        Text credits = new Text("\n\nAdapted from http://www.scrabblepages.com/main.scrabble/rules/\n\n");
                         infoTextFlow.getChildren().addAll(intro, boldedText1, text1, boldedText2, text2, text3, boldedText3, text4, boldedText4, text5, credits);
                     }
                     if (newValue == controls)

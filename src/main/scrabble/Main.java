@@ -1,4 +1,4 @@
-package scrabble;
+package main.scrabble;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -9,7 +9,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 /**
- * The launcher for the scrabble game.
+ * The launcher for the main.scrabble game.
  *
  * Created by sujay on 7/21/17
  */
