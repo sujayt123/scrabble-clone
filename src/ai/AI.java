@@ -62,9 +62,10 @@ public class AI {
      *              the trie containing the dictionary of valid words
      * @return the scrabble board after the AI takes its turn,
      *              the cpu hand after the turn,
-     *              the tile bag after the turn
+     *              the tile bag after the turn,
+     *              a pair of the string played and the score yielded by that string
      */
-    public static Triple<List<List<Character>>, List<Character>, Queue<Character>> CPUMove(
+    public static Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Pair<String, Integer>> CPUMove(
             Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Trie> input)
     {
 
@@ -96,6 +97,7 @@ public class AI {
 
         List<List<Character>> copyOfMainModel = forEachBoardSquareAsNestedList((r, c) -> boardBeforeCPUMove.get(r).get(c));
         List<List<Character>> transposeOfMainModel = forEachBoardSquareAsNestedList((r, c) -> boardBeforeCPUMove.get(c).get(r));
+        List<Character> copyOfCPUHand = cpuHand.stream().map(x->x).collect(Collectors.toList());
 
         HashSet<Character>[][] verticalCrossCheckSets = computeCrossCheckSets(copyOfMainModel, trie);
         HashSet<Character>[][] horizontalCrossCheckSetsForTransposeOfBoard = computeCrossCheckSets(transposeOfMainModel, trie);
@@ -104,90 +106,56 @@ public class AI {
         Set<Pair<Integer, Integer>> transposedAnchorSquares =
                 anchorSquares.stream().map(x -> new Pair<>(x.getValue(), x.getKey())).collect(Collectors.toSet());
 
-        //TODO
-//        statusMessage.getStyleClass().clear();
-//        statusMessage.getStyleClass().add("success-text");
-
         Triple<List<List<Character>>, String, Integer> bestCPUPlay = new Triple<>(null, "", Integer.MIN_VALUE);
 
-        anchorSquares.forEach(square -> computeBestHorizontalPlayAtAnchor(copyOfMainModel, cpuHand, anchorSquares, square, verticalCrossCheckSets, trie, false));
-        transposedAnchorSquares.forEach(square -> computeBestHorizontalPlayAtAnchor(transposeOfMainModel, transposedAnchorSquares, square, horizontalCrossCheckSetsForTransposeOfBoard, true));
+        anchorSquares.forEach(square -> computeBestHorizontalPlayAtAnchor(copyOfMainModel, copyOfCPUHand, anchorSquares, square, verticalCrossCheckSets, trie, false, bestCPUPlay));
+        transposedAnchorSquares.forEach(square -> computeBestHorizontalPlayAtAnchor(transposeOfMainModel, copyOfCPUHand, transposedAnchorSquares, square, horizontalCrossCheckSetsForTransposeOfBoard, trie, true, bestCPUPlay));
         ArrayList<Pair<Integer, Integer>> newSquaresPlacedLocations = new ArrayList<>();
 
-        List<List<Character>> bestScoringBoard = bestCPUPlay.getKey();
+        List<List<Character>> bestScoringBoard = bestCPUPlay.getA();
+        List<Character> newCPUHand = cpuHand.stream().map(x->x).collect(Collectors.toList());
+        Queue<Character> newTilesRemaining = new ArrayDeque<>(tilesRemaining.stream().map(x->x).collect(Collectors.toList()));
 
-        // Reset the default colors of text on the board
-        forEachBoardSquareAsList((r, c) -> {
-            if (mainModel.get(r).get(c) != ' ')
-            {
-                viewModel.get(r).get(c).getStyleClass().removeAll("bold-text");
-                viewModel.get(r).get(c).getStyleClass().add("black-text");
-            }
-            return null;
-        });
-
-        if (bestScoringBoard != null)
+        if (bestScoringBoard == null)
         {
-            cpuConsecutiveZeroScoringTurns = 0;
-            mainModel = forEachBoardSquareAsNestedList((r, c) -> {
-                // Side effects on the View Model
-                if (bestScoringBoard.get(r).get(c) != mainModel.get(r).get(c))
-                {
-                    viewModel.get(r).get(c).setText(bestScoringBoard.get(r).get(c) + "");
-                    viewModel.get(r).get(c).getStyleClass().add("bold-text");
-                    board_cells[r][c].getStyleClass().add("played-tile");
-                }
-                cpuHand.remove((Character)bestScoringBoard.get(r).get(c));
-                return bestScoringBoard.get(r).get(c);
-            });
-        }
-        else
-        {
-            cpuConsecutiveZeroScoringTurns++;
-//            System.out.println("Could not find anything to play with these characters");
             if (tilesRemaining.size() >= 7)
             {
-                // Attempt swap by dumping all cpu tiles into bag, and then randomly redrawing 7.
-                tilesRemaining.addAll(cpuHand);
-                List<Character> shuffledTiles = new ArrayList<>(tilesRemaining);
-                Collections.shuffle(shuffledTiles);
-                tilesRemaining.clear();
-                tilesRemaining.addAll(shuffledTiles);
-                cpuHand.clear();
-                IntStream.range(0, 7).forEach(i -> cpuHand.add(tilesRemaining.poll()));
-                statusMessage.setText("CPU swapped some tiles.");
+                // Attempt swap by randomly drawing 7 tiles, and adding the 7 former tiles back into the bag.
+                newCPUHand.clear();
+                for (int i = 0; i < 7; i++)
+                {
+                    newCPUHand.add(newTilesRemaining.poll());
+                    newTilesRemaining.add(cpuHand.get(i));
+                }
+                // Shuffle the bag of tiles.
+                ArrayList<Character> temp = new ArrayList<>(newTilesRemaining);
+                Collections.shuffle(temp);
+                newTilesRemaining = new ArrayDeque<>(temp);
             }
-            else
-            {
-                statusMessage.setText("CPU passed the turn.");
-            }
-            if (gameOver(cpuHand, cpuConsecutiveZeroScoringTurns))
-            {
-                cleanup();
-            }
-            return;
+            return new Quadruple<>(copyOfMainModel, newCPUHand, newTilesRemaining, new Pair("", 0));
         }
 
-        List<List<Character>> transposeOfUpdatedModel = forEachBoardSquareAsNestedList((r, c) -> mainModel.get(c).get(r));
-        computeCrossCheckSets(verticalCrossCheckSetsForModel, mainModel, getCoordinatesListForBoard());
-        computeCrossCheckSets(horizontalCrossCheckSetsForModelTranspose, transposeOfUpdatedModel, getCoordinatesListForBoard());
-        int score = Integer.parseInt(cpuScore.getText().split(":")[1]);
-        score += bestCPUPlay.getValue().getValue();
-        cpuScore.setText("CPU Score:" + score);
-        statusMessage.setText("CPU played " + bestCPUPlay.getValue().getKey() + " for " + bestCPUPlay.getValue().getValue() + " points.");
-        for (int k = cpuHand.size(); k < 7; k++)
+        // Get all pairs in which the board after the move differs from the board before the move.
+        List<Pair<Integer, Integer>> attempted_changed_coords = getCoordinatesListForBoard().stream().filter(x -> {
+            int r = x.getKey();
+            int c = x.getValue();
+            return bestScoringBoard.get(r).get(c) != boardBeforeCPUMove.get(r).get(c);
+        }).collect(Collectors.toList());
+
+        attempted_changed_coords.forEach(x -> newCPUHand.remove((Character)bestScoringBoard.get(x.getKey()).get(x.getValue())));
+
+        int score = bestCPUPlay.getC();
+
+        for (int k = newCPUHand.size(); k < 7; k++)
         {
-            Character c = tilesRemaining.poll();
+            Character c = newTilesRemaining.poll();
             if (c != null)
             {
-                cpuHand.add(c);
+                newCPUHand.add(c);
             }
         }
-        isFirstTurn = false;
-        if (gameOver(cpuHand, cpuConsecutiveZeroScoringTurns))
-        {
-            cleanup();
-        }
+
+        return new Quadruple<>(bestScoringBoard, newCPUHand, newTilesRemaining, new Pair(bestCPUPlay.getB(), score));
     }
 
     /**
@@ -199,6 +167,9 @@ public class AI {
      * @param verticalCrossCheckSets the vertical cross check sets for this board
      * @param trie the trie representing every word in the accepted dictionary
      * @param transposed true if the board provided is a transpose of the actual model, false otherwise
+     * @param bestCPUPlay a mutable instance of a triple containing
+     *                    (best possible board state after move,
+     *                    string, score for play)
      */
     private static void computeBestHorizontalPlayAtAnchor(List<List<Character>> boardBeforeCPUMove,
                                                    List<Character> cpuHand,
@@ -206,7 +177,8 @@ public class AI {
                                                    Pair<Integer, Integer> square,
                                                    HashSet<Character>[][] verticalCrossCheckSets,
                                                    Trie trie,
-                                                   boolean transposed) {
+                                                   boolean transposed,
+                                                   Triple<List<List<Character>>, String, Integer> bestCPUPlay) {
         int col = square.getValue();
         List<List<Character>> mutableBoard =
                 forEachBoardSquareAsNestedList((r, c) -> boardBeforeCPUMove.get(r).get(c));
@@ -222,7 +194,7 @@ public class AI {
             if (col == 0)
             {
                 ExtendRight(boardBeforeCPUMove, mutableBoard, square, "", cpuHand,
-                        trie.getRoot(), verticalCrossCheckSets, transposed);
+                        trie.getRoot(), verticalCrossCheckSets, trie, transposed, bestCPUPlay);
             }
             else if (boardBeforeCPUMove.get(square.getKey()).get(col - 1) != ' ')
             {
@@ -230,15 +202,14 @@ public class AI {
                         new Pair<>(square.getKey(), col - 1)).getKey();
 
                 ExtendRight(boardBeforeCPUMove, mutableBoard, square, prefix, cpuHand,
-                        trie.getNodeForPrefix(prefix), verticalCrossCheckSets, transposed);
+                        trie.getNodeForPrefix(prefix), verticalCrossCheckSets, trie, transposed, bestCPUPlay);
             }
         }
         LeftPart(boardBeforeCPUMove, mutableBoard, square,"", cpuHand,
-                trie.getRoot(), verticalCrossCheckSets, k, k, transposed);
+                trie.getRoot(), verticalCrossCheckSets, k, k, trie, transposed, bestCPUPlay);
     }
 
     /**
-     *
      * @param boardBeforeMove
      * @param board
      * @param square
@@ -249,10 +220,11 @@ public class AI {
      * @param limit
      * @param maxLimit
      * @param transposed
+     * @param bestCPUPlay
      */
-    private static void LeftPart(List<List<Character>> boardBeforeMove, List<List<Character>> board, Pair<Integer,Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, int limit, int maxLimit, boolean transposed)
+    private static void LeftPart(List<List<Character>> boardBeforeMove, List<List<Character>> board, Pair<Integer, Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, int limit, int maxLimit, Trie trie, boolean transposed, Triple<List<List<Character>>, String, Integer> bestCPUPlay)
     {
-        ExtendRight(boardBeforeMove, board, square, partialWord, tilesRemainingInRack, N, crossCheckSets, transposed);
+        ExtendRight(boardBeforeMove, board, square, partialWord, tilesRemainingInRack, N, crossCheckSets, trie, transposed, bestCPUPlay);
         if (limit > 0)
         {
             N.getOutgoingEdges().keySet().forEach(c -> {
@@ -264,7 +236,7 @@ public class AI {
                     }
                     board.get(square.getKey()).set(square.getValue() - 1, c);
                     tilesRemainingInRack.remove((Character)c);
-                    LeftPart(boardBeforeMove, board, square, partialWord + c, tilesRemainingInRack, N.getOutgoingEdges().get(c), crossCheckSets, limit - 1, maxLimit, transposed);
+                    LeftPart(boardBeforeMove, board, square, partialWord + c, tilesRemainingInRack, N.getOutgoingEdges().get(c), crossCheckSets, limit - 1, maxLimit, trie, transposed, bestCPUPlay);
                     tilesRemainingInRack.add(c);
                     for (int i = square.getValue() - 1; i > square.getValue() - maxLimit; i--)
                     {
@@ -278,7 +250,6 @@ public class AI {
 
 
     /**
-     *
      * @param boardBeforeCPUMove
      * @param board
      * @param square
@@ -286,31 +257,26 @@ public class AI {
      * @param tilesRemainingInRack
      * @param N
      * @param crossCheckSets
+     * @param trie
      * @param transposed
+     * @param bestCPUPlay
      */
-    private static void ExtendRight(List<List<Character>> boardBeforeCPUMove, List<List<Character>> board, Pair<Integer, Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, boolean transposed)
+    private static void ExtendRight(List<List<Character>> boardBeforeCPUMove, List<List<Character>> board, Pair<Integer, Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, Trie trie, boolean transposed, Triple<List<List<Character>>, String, Integer> bestCPUPlay)
     {
-//        for (int i = 0 ; i < 15 ; i++) {
-//            for (int j = 0; j< 15; j++)
-//            {
-//                System.out.print(board[i][j]);
-//            }
-//            System.out.println();
-//        }
         if (square.getValue() >= 15)
             return;
         if (board.get(square.getKey()).get(square.getValue()) == ' ')
         {
             if (N.isWord())
             {
-                LegalMove(board, partialWord, transposed);
+                LegalMove(boardBeforeCPUMove, board, partialWord, trie, transposed, bestCPUPlay);
             }
             N.getOutgoingEdges().keySet().forEach(c -> {
                 if (tilesRemainingInRack.contains(c) && crossCheckSets[square.getKey()][square.getValue()].contains(c))
                 {
                     tilesRemainingInRack.remove((Character)c);
                     board.get(square.getKey()).set(square.getValue(), c);
-                    ExtendRight(board, new Pair<>(square.getKey(), square.getValue() + 1), partialWord + c, tilesRemainingInRack, N.getOutgoingEdges().get(c), crossCheckSets, transposed);
+                    ExtendRight(boardBeforeCPUMove, board, new Pair<>(square.getKey(), square.getValue() + 1), partialWord + c, tilesRemainingInRack, N.getOutgoingEdges().get(c), crossCheckSets, trie, transposed, bestCPUPlay);
                     board.get(square.getKey()).set(square.getValue(), ' ');
                     tilesRemainingInRack.add(c);
                 }
@@ -320,14 +286,16 @@ public class AI {
         {
             if (N.getOutgoingEdges().containsKey(board.get(square.getKey()).get(square.getValue())))
             {
-                ExtendRight(board, new Pair<>(square.getKey(), square.getValue() + 1), partialWord + board.get(square.getKey()).get(square.getValue()), tilesRemainingInRack, N.getOutgoingEdges().get(board.get(square.getKey()).get(square.getValue())), crossCheckSets, transposed);
+                ExtendRight(boardBeforeCPUMove, board, new Pair<>(square.getKey(), square.getValue() + 1), partialWord + board.get(square.getKey()).get(square.getValue()), tilesRemainingInRack, N.getOutgoingEdges().get(board.get(square.getKey()).get(square.getValue())), crossCheckSets, trie, transposed, bestCPUPlay);
             }
         }
     }
 
-    private void LegalMove(List<List<Character>> b, String partialWord,
+    private static void LegalMove( List<List<Character>> mainModel,
+                            List<List<Character>> b, String partialWord,
+                           Trie trie,
                            boolean transposed,
-                           Triple<List<List<Character>>, String, Integer>) {
+                           Triple<List<List<Character>>, String, Integer> bestCPUPlay) {
 
         List<List<Character>> board = transposed ? forEachBoardSquareAsNestedList((r, c) -> b.get(c).get(r)) : b;
 
@@ -338,19 +306,19 @@ public class AI {
             return board.get(r).get(c) != mainModel.get(r).get(c);
         }).collect(Collectors.toList());
 
-        if (!isValidMove(board, changed_coords_by_cpu))
+        if (!validMove(mainModel, board, trie))
             return;
 
         int score;
         if (transposed)
         {
-            score = scoreVertical(board, changed_coords_by_cpu.get(0));
-            score += changed_coords_by_cpu.stream().map(p -> scoreHorizontal(board, p)).reduce((x, y) -> x+y).get();
+            score = scoreVertical(mainModel, board, changed_coords_by_cpu.get(0));
+            score += changed_coords_by_cpu.stream().map(p -> scoreHorizontal(mainModel, board, p)).reduce((x, y) -> x+y).get();
         }
         else
         {
-            score = scoreHorizontal(board, changed_coords_by_cpu.get(0));
-            score += changed_coords_by_cpu.stream().map(p -> scoreVertical(board, p)).reduce((x, y) -> x+y).get();
+            score = scoreHorizontal(mainModel, board, changed_coords_by_cpu.get(0));
+            score += changed_coords_by_cpu.stream().map(p -> scoreVertical(mainModel, board, p)).reduce((x, y) -> x+y).get();
         }
 
         if (changed_coords_by_cpu.size() == 7)
@@ -358,11 +326,12 @@ public class AI {
             score += 50;
         }
 
-        if (score > bestCPUPlay.getValue().getValue())
+        if (score > bestCPUPlay.getC())
         {
-//            System.out.println("The word " + partialWord + " garnered " + score + " points for the CPU");
-            bestCPUPlay = new Pair<>(forEachBoardSquareAsNestedList((r, c) -> board.get(r).get(c)),
-                    new Pair<>(partialWord.concat(""), score));
+            bestCPUPlay = new Triple(
+                    forEachBoardSquareAsNestedList((r, c) -> board.get(r).get(c)),
+                    partialWord.concat(""),
+                    score);
         }
     }
 

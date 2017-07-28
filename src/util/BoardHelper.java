@@ -184,7 +184,7 @@ public class BoardHelper {
      * @param coord the coordinate for which we should score a vertically oriented word for the play
      * @return the score for the vertical word involving coord in boardAfterValidatedMove
      */
-    private static int scoreVertical(List<List<Character>> boardBeforeValidatedMove,
+    public static int scoreVertical(List<List<Character>> boardBeforeValidatedMove,
                                      List<List<Character>> boardAfterValidatedMove,
                                      Pair<Integer, Integer> coord)
     {
@@ -251,7 +251,7 @@ public class BoardHelper {
      * @param coord the coordinate for which we should score a vertically oriented word for the play
      * @return the score for the horizontal word involving coord in boardAfterValidatedMove
      */
-    private static int scoreHorizontal(List<List<Character>> boardBeforeValidatedMove, List<List<Character>> boardAfterValidatedMove, Pair<Integer, Integer> coord)
+    public static int scoreHorizontal(List<List<Character>> boardBeforeValidatedMove, List<List<Character>> boardAfterValidatedMove, Pair<Integer, Integer> coord)
     {
         int row = coord.getKey();
 
