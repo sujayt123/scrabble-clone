@@ -1,4 +1,4 @@
-package util;
+package main.util;
 
 import javafx.util.Pair;
 
@@ -9,9 +9,11 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
+ * A helper for functional programming.
+ *
  * Created by sujay on 7/22/17.
  */
-public class BoardHelper {
+public class FunctionHelper {
 
     private static List<Pair<Integer, Integer>> matrixOfCoords;
 
@@ -31,6 +33,10 @@ public class BoardHelper {
 
     /**
      * Applies the function biFunction to each square in the board and returns its results on each coordinate as a list.
+     *
+     * Note: this function can serve the dual purpose of creating side effects on existing state or mapping to new state
+     * entirely. While this may not follow the "traditional" functional forEach interface, I found it convenient.
+     *
      * @param biFunction A lambda that takes in two integers as input and spits something out as output
      * @param <T> The output type
      * @return a List of T
@@ -46,6 +52,10 @@ public class BoardHelper {
 
     /**
      * Applies the function biFunction to each square in the board and returns its results on each coordinate as a list.
+     *
+     * Note: this function can serve the dual purpose of creating side effects on existing state or mapping to new state
+     * entirely. While this may not follow the "traditional" functional forEach interface, I found it convenient.
+     *
      * @param biFunction A lambda that takes in two integers as input and spits something out as output
      * @param <T> The output type
      * @return a List of T
@@ -62,11 +72,14 @@ public class BoardHelper {
 
     /**
      * Applies the function biFunction to each provided square and returns its results on each coordinate as a list.
+     *
+     * Note: this function can serve the dual purpose of creating side effects on existing state or mapping to new state
+     * entirely. While this may not follow the "traditional" functional forEach interface, I found it convenient.
+     *
      * @param biFunction A lambda that takes in two integers as input and spits something out as output
      * @param input the input list of coords
      * @param <T> The output type
      * @return a List of T
-     * @return
      */
     public static <T> List<T> forEachProvidedSquareAsList(BiFunction<Integer, Integer, T> biFunction, List<Pair<Integer, Integer>> input)
     {
@@ -80,10 +93,10 @@ public class BoardHelper {
     /**
      * Applies the Function function to each letter in the alphabet and returns the output as a list of results.
      * @param function A lambda that takes in two integers as input and spits something out as output
-     * @param <T> The output type
+     * @param <U> The output type
      * @return a List of T
      */
-    public static <T, U> List<U> forEachAtoZ(Function<Character, U> function)
+    public static <U> List<U> forEachAtoZ(Function<Character, U> function)
     {
         return IntStream.rangeClosed((int)'A', (int)'Z').
                 mapToObj(x-> (char)x).map(function).collect(Collectors.toList());

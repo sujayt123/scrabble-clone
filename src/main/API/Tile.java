@@ -1,11 +1,25 @@
-package util;
+package main.API;
 
 import java.util.*;
 
 /**
+ * A utility class for operations on tiles or a tile bag.
+ *
  * Created by sujay on 7/22/17.
  */
-public class TileHelper {
+public class Tile {
+
+    private static List<Character> tileList =  Arrays.asList( 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E',
+            'E', 'E', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
+            'A', 'A', 'I', 'I', 'I', 'I', 'I', 'I', 'I',
+            'I', 'I', 'O', 'O', 'O', 'O', 'O', 'O', 'O',
+            'O', 'N', 'N', 'N', 'N', 'N', 'N', 'R', 'R',
+            'R', 'R', 'R', 'R', 'T', 'T', 'T', 'T', 'T',
+            'T', 'L', 'L', 'L', 'L', 'S', 'S', 'S', 'S',
+            'U', 'U', 'U', 'U', 'D', 'D', 'D', 'D', 'G',
+            'G', 'G', 'B', 'B', 'C', 'C', 'M', 'M', 'P',
+            'P', 'F', 'F', 'H', 'H', 'V', 'V', 'W', 'W',
+            'Y', 'Y', 'K', 'X', 'J', 'Q', 'Z');
 
     /**
      * Creates a queue of randomly shuffled tiles that represent the tile bag for a game.
@@ -13,17 +27,6 @@ public class TileHelper {
      */
     public static Queue<Character> getTileBagForGame()
     {
-        List<Character> tileList =  Arrays.asList( 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E',
-                'E', 'E', 'A', 'A', 'A', 'A', 'A', 'A', 'A',
-                'A', 'A', 'I', 'I', 'I', 'I', 'I', 'I', 'I',
-                'I', 'I', 'O', 'O', 'O', 'O', 'O', 'O', 'O',
-                'O', 'N', 'N', 'N', 'N', 'N', 'N', 'R', 'R',
-                'R', 'R', 'R', 'R', 'T', 'T', 'T', 'T', 'T',
-                'T', 'L', 'L', 'L', 'L', 'S', 'S', 'S', 'S',
-                'U', 'U', 'U', 'U', 'D', 'D', 'D', 'D', 'G',
-                'G', 'G', 'B', 'B', 'C', 'C', 'M', 'M', 'P',
-                'P', 'F', 'F', 'H', 'H', 'V', 'V', 'W', 'W',
-                'Y', 'Y', 'K', 'X', 'J', 'Q', 'Z');
         // Shuffle the tiles and arrange them into a queue.
         Collections.shuffle(tileList);
         return new ArrayDeque<>(tileList);

@@ -1,50 +1,75 @@
-package scrabble;
+package main.scrabble;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
+ * The controller for the help-window view.
+ *
  * Created by sujay on 7/24/17.
  */
 public class HelpBox implements Initializable {
 
+    /**
+     * The title text.
+     */
     @FXML
     private Text titleText;
 
+    /**
+     * The info textflow.
+     */
     @FXML
     private TextFlow infoTextFlow;
 
+    /**
+     * The tree view corresponding to the user's choice for info.
+     */
     @FXML
     private TreeView<String> treeView;
 
+    /**
+     * The scroll pane containing the infoTextFlow.
+     */
     @FXML
     private ScrollPane scrollPane;
 
-    private Stage window;
-
-    void display() throws Exception
+    /**
+     * Displays this help box.
+     */
+    void display()
     {
-        window = new Stage();
-        Parent root = FXMLLoader.load(getClass().getResource("help.fxml"));
+        // The stage for the help window.
+        Stage window = new Stage();
+        Parent root = null;
+        try {
+            root = FXMLLoader.load(getClass().getResource("help.fxml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         window.setTitle("Scrabble: Help");
         window.setScene(new Scene(root, 1000, 1000));
         window.showAndWait();
     }
 
+    /**
+     * The initialization routine for this JavaFX window.
+     * @param location FXML-set property
+     * @param resources FXML-set property
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -142,7 +167,7 @@ public class HelpBox implements Initializable {
                                 + "\n\n"
                                 + "Once all tiles are gone from the bag and a single player has placed all of their tiles, the game will end and the player with the highest score wins."
                         );
-                        Text credits = new Text("\n\nAdapted from http://www.scrabblepages.com/scrabble/rules/\n\n");
+                        Text credits = new Text("\n\nAdapted from http://www.scrabblepages.com/main.scrabble/rules/\n\n");
                         infoTextFlow.getChildren().addAll(intro, boldedText1, text1, boldedText2, text2, text3, boldedText3, text4, boldedText4, text5, credits);
                     }
                     if (newValue == controls)
