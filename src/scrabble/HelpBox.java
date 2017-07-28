@@ -14,37 +14,64 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 /**
+ * The controller for the help-window view.
+ *
  * Created by sujay on 7/24/17.
  */
 public class HelpBox implements Initializable {
 
+    /**
+     * The title text.
+     */
     @FXML
     private Text titleText;
 
+    /**
+     * The info textflow.
+     */
     @FXML
     private TextFlow infoTextFlow;
 
+    /**
+     * The tree view corresponding to the user's choice for info.
+     */
     @FXML
     private TreeView<String> treeView;
 
+    /**
+     * The scroll pane containing the infoTextFlow.
+     */
     @FXML
     private ScrollPane scrollPane;
 
-    private Stage window;
-
-    void display() throws Exception
+    /**
+     * Displays this help box.
+     */
+    void display()
     {
-        window = new Stage();
-        Parent root = FXMLLoader.load(getClass().getResource("help.fxml"));
+        // The stage for the help window.
+        Stage window = new Stage();
+        Parent root = null;
+        try {
+            root = FXMLLoader.load(getClass().getResource("help.fxml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         window.setTitle("Scrabble: Help");
         window.setScene(new Scene(root, 1000, 1000));
         window.showAndWait();
     }
 
+    /**
+     * The initialization routine for this JavaFX window.
+     * @param location FXML-set property
+     * @param resources FXML-set property
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);

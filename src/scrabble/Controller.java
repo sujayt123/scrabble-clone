@@ -26,6 +26,8 @@ import static util.TileHelper.*;
 
 /**
  * The controller for the Scrabble Game.
+ *
+ * Created by sujay on 7/21/17
  */
 
 public class Controller implements Initializable {
@@ -705,7 +707,7 @@ public class Controller implements Initializable {
                     }
                 });
 
-                if (prefixNode == trie.root && verticalSuffixToThisSquare.toString().equals(""))
+                if (prefixNode == trie.getRoot() && verticalSuffixToThisSquare.toString().equals(""))
                 {
                     crossCheckSets[i][j].addAll(forEachAtoZ(c->c));
 
@@ -871,7 +873,7 @@ public class Controller implements Initializable {
         {
             if (col == 0)
             {
-                ExtendRight(board, square, "", cpuHand, trie.root, verticalCrossCheckSets, transposed);
+                ExtendRight(board, square, "", cpuHand, trie.getRoot(), verticalCrossCheckSets, transposed);
             }
             else if (board.get(square.getKey()).get(col - 1) != ' ')
             {
@@ -880,7 +882,7 @@ public class Controller implements Initializable {
             }
         }
 
-        LeftPart(board, square,"", cpuHand, trie.root, verticalCrossCheckSets, k, k, transposed);
+        LeftPart(board, square,"", cpuHand, trie.getRoot(), verticalCrossCheckSets, k, k, transposed);
     }
 
     private void LeftPart(List<List<Character>> board, Pair<Integer,Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, int limit, int maxLimit, boolean transposed)

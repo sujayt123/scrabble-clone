@@ -17,31 +17,46 @@ public class TrieNode {
     private Map<Character, TrieNode> outgoingEdges;
 
     /**
-     * A counter for debugging purposes. Not for client use.
-     */
-    private static int numberInsertions = 0;
-
-    /**
      * Indicates whether the character in the Trie's root-child-child-...-this chain comprises a valid word.
      */
     private boolean isWord;
 
+    /**
+     * Constructs a new TrieNode
+     *
+     * @param isWord true if the trienode corresponds to a completed word, false otherwise
+     */
     TrieNode(boolean isWord)
     {
         this.isWord = isWord;
         outgoingEdges = new HashMap<>();
     }
 
+    /**
+     * Get the outgoing edges.
+     *
+     * @return outgoing edges from this trie node within the containing prefix tree
+     */
     public Map<Character, TrieNode> getOutgoingEdges() {
         return outgoingEdges;
     }
+
+    /**
+     * Returns true if this trienode corresponds to a terminal word, false otherwise.
+     * @return isWord
+     */
 
     public boolean isWord() {
         return isWord;
     }
 
+    /**
+     * Recursively inserts a word into the prefix tree, one trienode at a time.
+     *
+     * @param s the string to insert
+     * @param index the letter in the string to insert into this trienode
+     */
     void insertWord(String s, int index) {
-        numberInsertions++;
         if (index < s.length())
         {
                 TrieNode child = outgoingEdges.containsKey(s.charAt(index)) ?
@@ -55,6 +70,13 @@ public class TrieNode {
         }
     }
 
+    /**
+     * Gets the trie node for a provided prefix if it exists, null otherwise.
+     *
+     * @param s the string to consider
+     * @param index the letter in the string to look at in this trienode
+     * @return the trie node for a provided prefix if it exists, null otherwise.
+     */
     public TrieNode getNodeForPrefix(String s, int index) {
         if (index == s.length())
         {

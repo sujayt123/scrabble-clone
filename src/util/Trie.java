@@ -11,11 +11,17 @@ import java.net.URL;
  */
 public class Trie {
 
-    public TrieNode root;
+    /**
+     * The root of the trie.
+     */
+    private TrieNode root;
 
+    /**
+     * Constructor that builds prefix tree from the scrabble dictionary located at the hardcoded URL.
+     */
     public Trie()
     {
-        root = new TrieNode(false);
+        setRoot(new TrieNode(false));
         try
         {
             URL dictionary = new URL("https://raw.githubusercontent.com/sujayt123/ScrabbleClone/master/src/util/dictionary.txt");
@@ -23,7 +29,7 @@ public class Trie {
                 String line;
                 while ((line = br.readLine()) != null) {
                     // process the line.
-                    root.insertWord(line, 0);
+                    getRoot().insertWord(line, 0);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -35,9 +41,52 @@ public class Trie {
         }
     }
 
-    public TrieNode getNodeForPrefix(String s)
+    /**
+     * Constructor that builds a trie from the dictionary .txt file located at the provided URL.
+     *
+     * Requires:
+     * - dictionaryTextFileOnline to be a well-formed URL that points to a dictionary online
+     * - the dictionary itself must contain exactly one word per line
+     *
+     * @param dictionaryTextFileOnline
+     */
+    public Trie(URL dictionaryTextFileOnline)
     {
-        return root.getNodeForPrefix(s, 0);
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(dictionaryTextFileOnline.openStream()))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // process the line.
+                getRoot().insertWord(line.toUpperCase(), 0);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    /**
+     * Gets the trie node corresponding to the prefix s, null otherwise.
+     * @param s a string whose existence as a prefix we check in the trie
+     * @return the trie node corresponding to prefix s, null otherwise
+     */
+    public TrieNode getNodeForPrefix(String s)
+    {
+        return getRoot().getNodeForPrefix(s, 0);
+    }
+
+    /**
+     * Gets the root of the trie.
+     *
+     * @return the root of the trie
+     */
+    public TrieNode getRoot() {
+        return root;
+    }
+
+    /**
+     * Sets the root of the trie.
+     * @param root the root of the trie
+     */
+    private void setRoot(TrieNode root) {
+        this.root = root;
+    }
 }
