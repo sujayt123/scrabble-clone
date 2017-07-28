@@ -52,7 +52,7 @@ public class AI {
      * Returns the state of the Scrabble board after the CPU plays the highest possible scoring word from his position.
      *
      * The client should assume that in all cases when no move is possible with the CPU hand,
-     * the CPU defaults to swapping tiles if the bagSize >=7, else pass the turn.
+     * the CPU defaults to swapping tiles if the bagSize is greater than or equal to 7, else pass the turn.
      *
      * @param input the scrabble board before the AI takes its turn,
      *              the cpu hand before the turn,

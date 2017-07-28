@@ -35,6 +35,7 @@ public class Quadruple<T, U, V, W> {
      * @param a first elem
      * @param b second elem
      * @param c third elem
+     * @param d fourth elem
      */
     public Quadruple(T a, U b, V c, W d) {
         this.a = a;
