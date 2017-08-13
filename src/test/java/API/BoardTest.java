@@ -1,7 +1,7 @@
-package test.API;
+package API;
 
 import javafx.util.Pair;
-import main.API.Trie;
+import API.Trie;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static main.API.Board.*;
+import static API.Board.*;
 
 /**
  * Created by sujay on 7/28/17.

@@ -1,10 +1,10 @@
-package main.API;
+package API;
 
-import main.API.Tile;
+import API.Tile;
 import javafx.util.Pair;
-import main.util.FunctionHelper;
-import main.util.TrieNode;
-import main.util.Triple;
+import util.FunctionHelper;
+import util.TrieNode;
+import util.Triple;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -13,7 +13,7 @@ import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static main.util.FunctionHelper.forEachBoardSquareAsList;
+import static util.FunctionHelper.forEachBoardSquareAsList;
 
 /**
  * A class to enable validation and scoring of a play on a scrabble board.

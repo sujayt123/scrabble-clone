@@ -1,8 +1,8 @@
-package main.scrabble;
+package scrabble;
 
-import main.API.AI;
-import main.API.Tile;
-import main.API.Trie;
+import API.AI;
+import API.Tile;
+import API.Trie;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.collections.transformation.FilteredList;
@@ -15,18 +15,18 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
-import main.util.FunctionHelper;
-import main.util.Quadruple;
+import util.FunctionHelper;
+import util.Quadruple;
 
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static main.API.Board.scoreMove;
-import static main.API.Board.validMove;
-import static main.API.Tile.getTileBagForGame;
-import static main.util.FunctionHelper.*;
+import static API.Board.scoreMove;
+import static API.Board.validMove;
+import static API.Tile.getTileBagForGame;
+import static util.FunctionHelper.*;
 
 /**
  * The controller for the Scrabble Game.
@@ -275,7 +275,7 @@ public class Controller implements Initializable {
         List<List<Character>> textInViewModel = forEachBoardSquareAsNestedList((r, c) ->
                 viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' ');
 
-        List<Pair<Integer, Integer>> changed_coordinates = FunctionHelper.getCoordinatesListForBoard().stream().filter(x -> {
+        List<Pair<Integer, Integer>> changed_coordinates = getCoordinatesListForBoard().stream().filter(x -> {
             int r = x.getKey();
             int c = x.getValue();
             return mainModel.get(r).get(c) != textInViewModel.get(r).get(c);
@@ -392,7 +392,7 @@ public class Controller implements Initializable {
         List<List<Character>> textInViewModel = forEachBoardSquareAsNestedList((r, c) ->
                 viewModel.get(r).get(c).getText().length() == 1 ? viewModel.get(r).get(c).getText().charAt(0) : ' ');
 
-        List<Pair<Integer, Integer>> changed_coordinates = FunctionHelper.getCoordinatesListForBoard().stream().filter(x -> {
+        List<Pair<Integer, Integer>> changed_coordinates = getCoordinatesListForBoard().stream().filter(x -> {
             int r = x.getKey();
             int c = x.getValue();
             return mainModel.get(r).get(c) != textInViewModel.get(r).get(c);
@@ -437,9 +437,9 @@ public class Controller implements Initializable {
         statusMessage.getStyleClass().add("success-text");
 
         Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Pair<String, Integer>>
-                cpuPlay = main.API.AI.CPUMove(new Quadruple<>(mainModel, cpuHand, tilesRemaining, trie));
+                cpuPlay = API.AI.CPUMove(new Quadruple<>(mainModel, cpuHand, tilesRemaining, trie));
 
-        List<Pair<Integer, Integer>> changed_coordinates = FunctionHelper.getCoordinatesListForBoard().stream().filter(x -> {
+        List<Pair<Integer, Integer>> changed_coordinates = getCoordinatesListForBoard().stream().filter(x -> {
             int r = x.getKey();
             int c = x.getValue();
             return mainModel.get(r).get(c) != cpuPlay.getA().get(r).get(c);

@@ -1,4 +1,4 @@
-package main.scrabble;
+package scrabble;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -56,7 +56,7 @@ public class HelpBox implements Initializable {
         Stage window = new Stage();
         Parent root = null;
         try {
-            root = FXMLLoader.load(getClass().getResource("help.fxml"));
+            root = FXMLLoader.load(getClass().getResource("/help.fxml"));
         } catch (IOException e) {
             e.printStackTrace();
         }

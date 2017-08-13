@@ -1,6 +1,6 @@
-package main.API;
+package API;
 
-import main.util.TrieNode;
+import util.TrieNode;
 
 import java.io.BufferedReader;
 import java.io.IOException;

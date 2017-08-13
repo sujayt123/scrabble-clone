@@ -1,17 +1,17 @@
-package main.API;
+package API;
 
-import main.API.Trie;
+import API.Trie;
 import javafx.util.Pair;
-import main.util.Quadruple;
-import main.util.TrieNode;
-import main.util.Triple;
+import util.Quadruple;
+import util.TrieNode;
+import util.Triple;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static main.API.Board.*;
-import static main.util.FunctionHelper.*;
+import static API.Board.*;
+import static util.FunctionHelper.*;
 
 /**
  * A class that implements an [efficient] Scrabble solver algorithm.

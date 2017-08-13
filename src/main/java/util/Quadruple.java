@@ -1,4 +1,4 @@
-package main.util;
+package util;
 
 /**
  * A generic class to hold a quadruple of data.

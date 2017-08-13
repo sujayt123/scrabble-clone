@@ -1,4 +1,4 @@
-package main.scrabble;
+package scrabble;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -19,7 +19,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         Parent root = null;
         try {
-            root = FXMLLoader.load(getClass().getResource("view.fxml"));
+            root = FXMLLoader.load(getClass().getResource("/view.fxml"));
         } catch (IOException e) {
             e.printStackTrace();
         }

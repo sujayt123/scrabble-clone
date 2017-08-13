@@ -1,6 +1,6 @@
-package test.API;
+package API;
 
-import main.API.Trie;
+import API.Trie;
 import org.junit.Test;
 
 import java.net.URL;

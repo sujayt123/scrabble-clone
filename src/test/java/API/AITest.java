@@ -1,8 +1,8 @@
-package test.API;
+package API;
 
 import javafx.util.Pair;
-import main.API.Trie;
-import main.util.Quadruple;
+import API.Trie;
+import util.Quadruple;
 import org.junit.Before;
 
 import java.util.ArrayDeque;
@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 
-import static main.API.AI.*;
+import static API.AI.*;
 import static org.junit.Assert.*;
 
 /**

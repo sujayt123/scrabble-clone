@@ -1,4 +1,4 @@
-package main.API;
+package API;
 
 import java.util.*;
 
