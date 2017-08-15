@@ -37,14 +37,4 @@ public abstract class Message {
         Gson gson = new Gson();
         return gson.toJson(this, getClass());
     }
-
-    /**
-     * Every message must be able to construct an instance of itself with
-     * a provided json representation of the properties to set.
-     */
-    public Message consumeJson(String s)
-    {
-        Gson gson = new Gson();
-        return gson.fromJson(s, getClass());
-    }
 }

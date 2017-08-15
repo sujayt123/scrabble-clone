@@ -1,5 +1,6 @@
 package communication;
 
+import com.google.gson.Gson;
 import communication.msg.Message;
 
 import javax.json.Json;
@@ -28,11 +29,7 @@ public class MessageBuilder {
          * with java reflection to build the object in question.
          */
 
-        Class myClass;
-        Class[] types = {};
-        Constructor constructor;
-        Object[] parameters = {};
-        Message instanceOfMyClass;
+        Class<?> myClass;
 
         try {
             myClass = Class.forName(classType);
@@ -40,20 +37,8 @@ public class MessageBuilder {
             return Optional.empty();
         }
 
-        try {
-            constructor = myClass.getConstructor(types);
-        } catch (NoSuchMethodException e) {
-            return Optional.empty();
-        }
-
-        try {
-            instanceOfMyClass = (Message) constructor.newInstance(parameters);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            return Optional.empty();
-        }
-
-        // Invoke the message's consumeJson method to update its contents.
-        return Optional.of(instanceOfMyClass.consumeJson(s));
+        Gson gson = new Gson();
+        return Optional.of((Message)gson.fromJson(s, myClass));
     }
 
 }
