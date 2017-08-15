@@ -2,9 +2,6 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/sujayt123/scrabble-clone/badge.svg?branch=master)](https://coveralls.io/github/sujayt123/scrabble-clone?branch=master)
 
-A scrabble clone built using JavaFX. The AI was developed using the algorithm described [here](http://dl.acm.org/citation.cfm?id=42420).
+A full-fledged scrabble application featuring solo and online play. Built in client/server style using Java EE, JavaFX and other utilities.
 
-To launch, download and execute the .jar file from the root directory of the project.
-
-Note that the interface to the computational backend can be obtained by downloading the scrabble and util packages.
-Examples on how to use the scrabble are provided in the test package.
+To launch, download and execute the client application from the root directory of the project.
