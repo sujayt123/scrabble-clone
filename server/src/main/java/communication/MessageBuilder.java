@@ -53,9 +53,7 @@ public class MessageBuilder {
         }
 
         // Invoke the message's consumeJson method to update its contents.
-        instanceOfMyClass.consumeJson(s);
-
-        return Optional.of(instanceOfMyClass);
+        return Optional.of(instanceOfMyClass.consumeJson(s));
     }
 
 }
