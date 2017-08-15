@@ -1,4 +1,4 @@
-package API;
+package scrabble;
 
 import util.TrieNode;
 
@@ -10,7 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * An uncompressed prefix tree built from the scrabble dictionary available from the hardcoded URL.
+ * An uncompressed prefix tree built from the GUI dictionary available from the hardcoded URL.
  *
  * Created by sujay on 7/21/17.
  */
@@ -22,7 +22,7 @@ public class Trie {
     private TrieNode root;
 
     /**
-     * Constructor that builds prefix tree from the scrabble dictionary located at the hardcoded URL.
+     * Constructor that builds prefix tree from the GUI dictionary located at the hardcoded URL.
      */
     public Trie()
     {

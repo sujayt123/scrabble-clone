@@ -1,8 +1,6 @@
-package API;
+package scrabble;
 
 import javafx.util.Pair;
-import API.Trie;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -10,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static API.Board.*;
+import static scrabble.Board.*;
 
 /**
  * Created by sujay on 7/28/17.

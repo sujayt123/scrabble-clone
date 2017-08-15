@@ -1,4 +1,4 @@
-package API;
+package scrabble;
 
 import java.util.*;
 
@@ -23,7 +23,7 @@ public class Tile {
 
     /**
      * Creates a queue of randomly shuffled tiles that represent the tile bag for a game.
-     * @return A shuffled queue of scrabble tiles
+     * @return A shuffled queue of GUI tiles
      */
     public static Queue<Character> getTileBagForGame()
     {
@@ -33,7 +33,7 @@ public class Tile {
     }
 
     /**
-     * Gets the scrabble value of character c.
+     * Gets the GUI value of character c.
      * @param c character to score
      * @return the score of c if played on a non-premium square on the traditional Scrabble board
      */

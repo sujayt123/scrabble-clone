@@ -1,6 +1,5 @@
-package API;
+package scrabble;
 
-import API.Trie;
 import org.junit.Test;
 
 import java.net.URL;

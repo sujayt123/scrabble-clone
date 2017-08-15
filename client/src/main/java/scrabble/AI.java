@@ -1,6 +1,5 @@
-package API;
+package scrabble;
 
-import API.Trie;
 import javafx.util.Pair;
 import util.Quadruple;
 import util.TrieNode;
@@ -10,7 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static API.Board.*;
+import static scrabble.Board.*;
 import static util.FunctionHelper.*;
 
 /**
@@ -54,11 +53,11 @@ public class AI {
      * The client should assume that in all cases when no move is possible with the CPU hand,
      * the CPU defaults to swapping tiles if the bagSize is greater than or equal to 7, else pass the turn.
      *
-     * @param input the scrabble board before the AI takes its turn,
+     * @param input the GUI board before the AI takes its turn,
      *              the cpu hand before the turn,
      *              the tile bag before the turn,
      *              the trie containing the dictionary of valid words
-     * @return the scrabble board after the AI takes its turn,
+     * @return the GUI board after the AI takes its turn,
      *              the cpu hand after the turn,
      *              the tile bag after the turn,
      *              a pair of the string played and the score yielded by that string
@@ -208,17 +207,17 @@ public class AI {
 
     /**
      * A helper method for the recursive backtracking AI algorithm.
-     * @param boardBeforeMove the scrabble board before the move
+     * @param boardBeforeMove the GUI board before the move
      * @param board a mutable board that represents the current state of the backtracking search
      * @param square the anchor square
      * @param partialWord the partial word formed so far
      * @param tilesRemainingInRack the tiles remaining in the CPU's hand
      * @param N the trienode currently representing the partial word
-     * @param crossCheckSets the vertical cross check sets for the provided scrabble board (boardBeforeMove)
+     * @param crossCheckSets the vertical cross check sets for the provided GUI board (boardBeforeMove)
      * @param limit parameter for leftwards expansion
      * @param maxLimit maximum value of parameter for leftwards expansion
      * @param trie the trie representing the dictionary
-     * @param transposed whether the board is currently a transposition of the actual model of the scrabble board
+     * @param transposed whether the board is currently a transposition of the actual model of the GUI board
      * @param bestCPUPlay a mutable triple containing information about the cpu's best play
      */
     private static void LeftPart(List<List<Character>> boardBeforeMove, List<List<Character>> board, Pair<Integer, Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, int limit, int maxLimit, Trie trie, boolean transposed, Triple<List<List<Character>>, String, Integer> bestCPUPlay)
@@ -251,7 +250,7 @@ public class AI {
     /**
      * A helper method for the recursive backtracking AI algorithm. Extends the left part created by leftPart(...)
      *
-     * @param boardBeforeCPUMove   the scrabble board before the move
+     * @param boardBeforeCPUMove   the GUI board before the move
      * @param board a mutable board that represents the current state of the backtracking search
      * @param square the current square to fill in
      * @param partialWord the partial word formed so far
@@ -259,7 +258,7 @@ public class AI {
      * @param N the trie node corresponding to partialWord
      * @param crossCheckSets the vertical cross-check sets for this board (boardBeforeCPUMove)
      * @param trie the trie representing the dictionary
-     * @param transposed whether the board is currently a transposition of the actual model of the scrabble board
+     * @param transposed whether the board is currently a transposition of the actual model of the GUI board
      * @param bestCPUPlay a mutable triple containing information about the cpu's best play
      */
     private static void ExtendRight(List<List<Character>> boardBeforeCPUMove, List<List<Character>> board, Pair<Integer, Integer> square, String partialWord, List<Character> tilesRemainingInRack, TrieNode N, HashSet<Character>[][] crossCheckSets, Trie trie, boolean transposed, Triple<List<List<Character>>, String, Integer> bestCPUPlay)

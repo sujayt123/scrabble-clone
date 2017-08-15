@@ -1,8 +1,7 @@
-package scrabble;
+package GUI;
 
-import API.AI;
-import API.Tile;
-import API.Trie;
+import scrabble.Tile;
+import scrabble.Trie;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
 import javafx.collections.transformation.FilteredList;
@@ -15,7 +14,6 @@ import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.util.Pair;
-import util.FunctionHelper;
 import util.Quadruple;
 
 import java.net.URL;
@@ -23,9 +21,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static API.Board.scoreMove;
-import static API.Board.validMove;
-import static API.Tile.getTileBagForGame;
+import static scrabble.Board.scoreMove;
+import static scrabble.Board.validMove;
+import static scrabble.Tile.getTileBagForGame;
 import static util.FunctionHelper.*;
 
 /**
@@ -100,7 +98,7 @@ public class Controller implements Initializable {
     private List<Character> playerHand, cpuHand;
 
     /**
-     * A prefix tree data structure to house the dictionary of main.scrabble words. See "util" for more information.
+     * A prefix tree data structure to house the dictionary of main.GUI words. See "util" for more information.
      */
     private static Trie trie;
 
@@ -437,7 +435,7 @@ public class Controller implements Initializable {
         statusMessage.getStyleClass().add("success-text");
 
         Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Pair<String, Integer>>
-                cpuPlay = API.AI.CPUMove(new Quadruple<>(mainModel, cpuHand, tilesRemaining, trie));
+                cpuPlay = scrabble.AI.CPUMove(new Quadruple<>(mainModel, cpuHand, tilesRemaining, trie));
 
         List<Pair<Integer, Integer>> changed_coordinates = getCoordinatesListForBoard().stream().filter(x -> {
             int r = x.getKey();
@@ -662,7 +660,7 @@ public class Controller implements Initializable {
     }
 
     /**
-     * Resets the main.scrabble board.
+     * Resets the main.GUI board.
      */
     private void clearBoard()
     {

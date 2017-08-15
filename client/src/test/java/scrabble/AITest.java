@@ -1,7 +1,6 @@
-package API;
+package scrabble;
 
 import javafx.util.Pair;
-import API.Trie;
 import util.Quadruple;
 import org.junit.Before;
 
@@ -10,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
 
-import static API.AI.*;
+import static scrabble.AI.*;
 import static org.junit.Assert.*;
 
 /**

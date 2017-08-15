@@ -1,6 +1,5 @@
-package API;
+package scrabble;
 
-import API.Tile;
 import javafx.util.Pair;
 import util.FunctionHelper;
 import util.TrieNode;
@@ -16,7 +15,7 @@ import java.util.stream.IntStream;
 import static util.FunctionHelper.forEachBoardSquareAsList;
 
 /**
- * A class to enable validation and scoring of a play on a scrabble board.
+ * A class to enable validation and scoring of a play on a GUI board.
  *
  * Created by sujay on 7/27/17.
  */
@@ -46,8 +45,8 @@ public class Board {
 
     /**
      * Returns if the board state in boardAfterAttemptedMove is a valid play off of boardBeforeMove
-     * @param boardBeforeMove the scrabble board before the move
-     * @param boardAfterAttemptedMove the scrabble board after the attempted move
+     * @param boardBeforeMove the GUI board before the move
+     * @param boardAfterAttemptedMove the GUI board after the attempted move
      * @param trie the trie representing the dictionary to use for validation
      * @return true is boardAfterAttemptedMove is a valid state after boardBeforeMove, false otherwise
      */
@@ -143,8 +142,8 @@ public class Board {
      * validMove(boardBeforeMove, boardAfterMove) to be true
      *
      * Returns the score for the move represented by the difference boardAfterMove and boardBeforeMove.
-     * @param boardBeforeMove the scrabble board before the move
-     * @param boardAfterValidatedMove the scrabble board after the validated move
+     * @param boardBeforeMove the GUI board before the move
+     * @param boardAfterValidatedMove the GUI board after the validated move
      * @return the score for the play
      */
     public static int scoreMove(List<List<Character>> boardBeforeMove, List<List<Character>> boardAfterValidatedMove)
@@ -186,8 +185,8 @@ public class Board {
      * validMove(boardBeforeMove, boardAfterMove) to be true
      *
      * Returns the score for the move represented by the difference boardAfterMove and boardBeforeMove.
-     * @param boardBeforeValidatedMove the scrabble board before the validated move
-     * @param boardAfterValidatedMove the scrabble board after the validated move
+     * @param boardBeforeValidatedMove the GUI board before the validated move
+     * @param boardAfterValidatedMove the GUI board after the validated move
      * @param coord the coordinate for which we should score a vertically oriented word for the play
      * @return the score for the vertical word involving coord in boardAfterValidatedMove
      */
@@ -253,8 +252,8 @@ public class Board {
      *
      * Returns the score for the move represented by the difference boardAfterMove and boardBeforeMove.
      *
-     * @param boardBeforeValidatedMove the scrabble board before the validated move
-     * @param boardAfterValidatedMove the scrabble board after the validated move
+     * @param boardBeforeValidatedMove the GUI board before the validated move
+     * @param boardAfterValidatedMove the GUI board after the validated move
      * @param coord the coordinate for which we should score a horizontally oriented word for the play
      * @return the score for the horizontal word involving coord in boardAfterValidatedMove
      */
@@ -375,8 +374,8 @@ public class Board {
 
     /**
      * Is the vertical play a valid word in the vertical direction?
-     * @param boardBeforeAttemptedMove the scrabble board before the attempted move
-     * @param boardAfterAttemptedMove the scrabble board after the attempted move
+     * @param boardBeforeAttemptedMove the GUI board before the attempted move
+     * @param boardAfterAttemptedMove the GUI board after the attempted move
      * @param trie the trie representing the dictionary to use for validation
      * @param horizontalCrossCheckSets the horizontal cross check sets for boardBeforeAttemptedMove
      * @return true if the play is a valid vertical play, false otherwise
@@ -411,8 +410,8 @@ public class Board {
 
     /**
      * Is this horizontal play valid in the horizontal direction?
-     * @param boardBeforeAttemptedMove the scrabble board before the attempted move
-     * @param boardAfterAttemptedMove the scrabble board after the attempted move
+     * @param boardBeforeAttemptedMove the GUI board before the attempted move
+     * @param boardAfterAttemptedMove the GUI board after the attempted move
      * @param trie the trie representing the dictionary to use for validation
      * @param verticalCrossCheckSets the cross check sets for boardBeforeAttemptedMove
      * @return true if the play is a valid horizontal play, false otherwise
@@ -452,7 +451,7 @@ public class Board {
      * pass in model transpose and take the transpose of the output
      * of this function.
      *
-     * @param model the scrabble board
+     * @param model the GUI board
      * @param trie the trie to use for validation of plays in the board
      * @return the vertical cross-check sets for model under the constraints of trie
      */

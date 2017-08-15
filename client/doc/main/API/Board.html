@@ -48,11 +48,11 @@ var activeTableTab = "activeTableTab";
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="AI.html" title="class in main.API"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="Tile.html" title="class in main.API"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="AI.html" title="class in main.scrabble"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="Tile.html" title="class in main.scrabble"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
-<li><a href="../../index.html?main/API/Board.html" target="_top">Frames</a></li>
+<li><a href="../../index.html?main/scrabble/Board.html" target="_top">Frames</a></li>
 <li><a href="Board.html" target="_top">No&nbsp;Frames</a></li>
 </ul>
 <ul class="navList" id="allclasses_navbar_top">
@@ -91,7 +91,7 @@ var activeTableTab = "activeTableTab";
 <!-- ========= END OF TOP NAVBAR ========= -->
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
-<div class="subTitle">main.API</div>
+<div class="subTitle">main.scrabble</div>
 <h2 title="Class Board" class="title">Class Board</h2>
 </div>
 <div class="contentContainer">
@@ -99,7 +99,7 @@ var activeTableTab = "activeTableTab";
 <li>java.lang.Object</li>
 <li>
 <ul class="inheritance">
-<li>main.API.Board</li>
+<li>main.scrabble.Board</li>
 </ul>
 </li>
 </ul>
@@ -110,7 +110,7 @@ var activeTableTab = "activeTableTab";
 <br>
 <pre>public class <span class="typeNameLabel">Board</span>
 extends java.lang.Object</pre>
-<div class="block">A class to enable validation and scoring of a play on a scrabble board.
+<div class="block">A class to enable validation and scoring of a play on a GUI board.
 
  Created by sujay on 7/27/17.</div>
 </li>
@@ -167,7 +167,7 @@ extends java.lang.Object</pre>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static java.util.HashSet&lt;java.lang.Character&gt;[][]</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../main/API/Board.html#computeCrossCheckSets-java.util.List-main.API.Trie-">computeCrossCheckSets</a></span>(java.util.List&lt;java.util.List&lt;java.lang.Character&gt;&gt;&nbsp;model,
-                     <a href="Trie.html" title="class in main.API">Trie</a>&nbsp;trie)</code>
+                     <a href="Trie.html" title="class in main.scrabble">Trie</a>&nbsp;trie)</code>
 <div class="block">Computes the VERTICAL cross check sets for a given model.</div>
 </td>
 </tr>
@@ -207,7 +207,7 @@ extends java.lang.Object</pre>
 <td class="colFirst"><code>static boolean</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../main/API/Board.html#validMove-java.util.List-java.util.List-main.API.Trie-">validMove</a></span>(java.util.List&lt;java.util.List&lt;java.lang.Character&gt;&gt;&nbsp;boardBeforeMove,
          java.util.List&lt;java.util.List&lt;java.lang.Character&gt;&gt;&nbsp;boardAfterAttemptedMove,
-         <a href="Trie.html" title="class in main.API">Trie</a>&nbsp;trie)</code>
+         <a href="Trie.html" title="class in main.scrabble">Trie</a>&nbsp;trie)</code>
 <div class="block">Returns if the board state in boardAfterAttemptedMove is a valid play off of boardBeforeMove</div>
 </td>
 </tr>
@@ -258,12 +258,12 @@ extends java.lang.Object</pre>
 <h4>validMove</h4>
 <pre>public static&nbsp;boolean&nbsp;validMove(java.util.List&lt;java.util.List&lt;java.lang.Character&gt;&gt;&nbsp;boardBeforeMove,
                                 java.util.List&lt;java.util.List&lt;java.lang.Character&gt;&gt;&nbsp;boardAfterAttemptedMove,
-                                <a href="Trie.html" title="class in main.API">Trie</a>&nbsp;trie)</pre>
+                                <a href="Trie.html" title="class in main.scrabble">Trie</a>&nbsp;trie)</pre>
 <div class="block">Returns if the board state in boardAfterAttemptedMove is a valid play off of boardBeforeMove</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>boardBeforeMove</code> - the scrabble board before the move</dd>
-<dd><code>boardAfterAttemptedMove</code> - the scrabble board after the attempted move</dd>
+<dd><code>boardBeforeMove</code> - the GUI board before the move</dd>
+<dd><code>boardAfterAttemptedMove</code> - the GUI board after the attempted move</dd>
 <dd><code>trie</code> - the trie representing the dictionary to use for validation</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>true is boardAfterAttemptedMove is a valid state after boardBeforeMove, false otherwise</dd>
@@ -284,8 +284,8 @@ extends java.lang.Object</pre>
  Returns the score for the move represented by the difference boardAfterMove and boardBeforeMove.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>boardBeforeMove</code> - the scrabble board before the move</dd>
-<dd><code>boardAfterValidatedMove</code> - the scrabble board after the validated move</dd>
+<dd><code>boardBeforeMove</code> - the GUI board before the move</dd>
+<dd><code>boardAfterValidatedMove</code> - the GUI board after the validated move</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the score for the play</dd>
 </dl>
@@ -306,8 +306,8 @@ extends java.lang.Object</pre>
  Returns the score for the move represented by the difference boardAfterMove and boardBeforeMove.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>boardBeforeValidatedMove</code> - the scrabble board before the validated move</dd>
-<dd><code>boardAfterValidatedMove</code> - the scrabble board after the validated move</dd>
+<dd><code>boardBeforeValidatedMove</code> - the GUI board before the validated move</dd>
+<dd><code>boardAfterValidatedMove</code> - the GUI board after the validated move</dd>
 <dd><code>coord</code> - the coordinate for which we should score a vertically oriented word for the play</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the score for the vertical word involving coord in boardAfterValidatedMove</dd>
@@ -329,8 +329,8 @@ extends java.lang.Object</pre>
  Returns the score for the move represented by the difference boardAfterMove and boardBeforeMove.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>boardBeforeValidatedMove</code> - the scrabble board before the validated move</dd>
-<dd><code>boardAfterValidatedMove</code> - the scrabble board after the validated move</dd>
+<dd><code>boardBeforeValidatedMove</code> - the GUI board before the validated move</dd>
+<dd><code>boardAfterValidatedMove</code> - the GUI board after the validated move</dd>
 <dd><code>coord</code> - the coordinate for which we should score a horizontally oriented word for the play</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the score for the horizontal word involving coord in boardAfterValidatedMove</dd>
@@ -382,7 +382,7 @@ extends java.lang.Object</pre>
 <li class="blockList">
 <h4>computeCrossCheckSets</h4>
 <pre>public static&nbsp;java.util.HashSet&lt;java.lang.Character&gt;[][]&nbsp;computeCrossCheckSets(java.util.List&lt;java.util.List&lt;java.lang.Character&gt;&gt;&nbsp;model,
-                                                                               <a href="Trie.html" title="class in main.API">Trie</a>&nbsp;trie)</pre>
+                                                                               <a href="Trie.html" title="class in main.scrabble">Trie</a>&nbsp;trie)</pre>
 <div class="block">Computes the VERTICAL cross check sets for a given model.
 
  To compute the horizontal cross check sets for that model,
@@ -390,7 +390,7 @@ extends java.lang.Object</pre>
  of this function.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>model</code> - the scrabble board</dd>
+<dd><code>model</code> - the GUI board</dd>
 <dd><code>trie</code> - the trie to use for validation of plays in the board</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the vertical cross-check sets for model under the constraints of trie</dd>
@@ -424,11 +424,11 @@ extends java.lang.Object</pre>
 </div>
 <div class="subNav">
 <ul class="navList">
-<li><a href="AI.html" title="class in main.API"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
-<li><a href="Tile.html" title="class in main.API"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
+<li><a href="AI.html" title="class in main.scrabble"><span class="typeNameLink">Prev&nbsp;Class</span></a></li>
+<li><a href="Tile.html" title="class in main.scrabble"><span class="typeNameLink">Next&nbsp;Class</span></a></li>
 </ul>
 <ul class="navList">
-<li><a href="../../index.html?main/API/Board.html" target="_top">Frames</a></li>
+<li><a href="../../index.html?main/scrabble/Board.html" target="_top">Frames</a></li>
 <li><a href="Board.html" target="_top">No&nbsp;Frames</a></li>
 </ul>
 <ul class="navList" id="allclasses_navbar_bottom">

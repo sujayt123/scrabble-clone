@@ -1,4 +1,4 @@
-main.API
 main.scrabble
+main.GUI
 main.util
-test.API
+test.scrabble
