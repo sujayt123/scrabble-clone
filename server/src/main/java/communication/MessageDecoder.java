@@ -7,6 +7,9 @@ import javax.websocket.Decoder;
 import javax.websocket.EndpointConfig;
 import java.util.Optional;
 
+/**
+ * A decoder from raw stringified JSON into the appropriate Message.
+ */
 public class MessageDecoder implements Decoder.Text<Message> {
 
     @Override

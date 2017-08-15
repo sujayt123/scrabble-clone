@@ -6,6 +6,9 @@ import javax.websocket.EncodeException;
 import javax.websocket.Encoder;
 import javax.websocket.EndpointConfig;
 
+/**
+ * An encoder from Messages into stringified JSON to send over network.
+ */
 public class MessageEncoder implements Encoder.Text<Message> {
 
     @Override
