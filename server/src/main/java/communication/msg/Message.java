@@ -7,7 +7,7 @@ package communication.msg;
  * the message (as indicated by the MessageType) and the data it contains.
  *
  * Contract:
- * 1. Every concrete message must include a no-args constructor.
+ * 1. Every concrete message must include a no-args constructor (or have no constructor at all).
  * 2. Every concrete message must implement the toJson and consumeJson methods.
  *
  * Created by sujay on 8/14/17.
