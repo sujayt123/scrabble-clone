@@ -1,3 +1,4 @@
-dbname=
-username=
-password=
+dbUrl
+dbname
+username
+password
