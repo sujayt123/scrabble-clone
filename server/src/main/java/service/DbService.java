@@ -1,6 +1,7 @@
 package service;
 
 import communication.msg.server.GameListItem;
+import communication.msg.server.GameStateItem;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,7 +9,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Optional;
 
 import static org.mindrot.jbcrypt.BCrypt.*;
 
@@ -89,42 +90,44 @@ public class DbService {
      * Attempts to log in to the system with the provided credentials.
      * @param username the provided username
      * @param password the provided unsalted password
-     * @return true if the login was successful, false if it was not
+     * @return an Optional of the user_id of the user if the login was successful, Optional.empty otherwise
      */
-    public boolean login(String username, String password)
+    public Optional<Integer> login(String username, String password)
     {
+        Statement statement;
+        ResultSet resultSet;
         try {
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT password FROM users where username = \"" + username + "\"");
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("SELECT * FROM users where username = \"" + username + "\"");
 
             /* Check if the user with username ${username} already exists in the system */
-            boolean retVal = resultSet.next() && checkpw(password, resultSet.getString(1));
+            if(resultSet.next() && checkpw(password, resultSet.getString("password")))
+            {
+                int user_id = resultSet.getInt("user_id");
+                statement.close();
+                resultSet.close();
+                return Optional.of(user_id);
+            }
             statement.close();
             resultSet.close();
-            return retVal;
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return Optional.empty();
     }
 
     /**
      * Deletes an account (and all associated games) in the system on behalf of the user.
-     * @param username the provided username
-     * @param password the provided unsalted password
+     * @param user_id the user id of the verified user
      * @return true if the delete was successful, false if it was not
      */
-    public boolean deleteExistingAccount(String username, String password)
+    public boolean deleteExistingAccount(int user_id)
     {
         try {
-            /* Does the user have the appropriate credentials to delete the account? */
-            if (!login(username, password))
-                return false;
-
             /* Delete this user from the users table */
             PreparedStatement preparedStatement = connection
-                    .prepareStatement("DELETE from users where username = ?");
-            preparedStatement.setString(1, username);
+                    .prepareStatement("DELETE from users where user_id = ?");
+            preparedStatement.setInt(1, user_id);
             preparedStatement.executeUpdate();
 
             preparedStatement.close();
@@ -140,28 +143,24 @@ public class DbService {
      * Creates a new game involving users with usernames thisPlayerUsername and otherPlayerUsername if they exist,
      * else returns false.
      *
-     * @param thisPlayerUsername the creating player's username
+     * @param p1id the creating player's user_id
      * @param otherPlayerUsername the username of his/her opponent ("CPU" for cpu player)
      * @return true if the game was successfully made, false otherwise
      */
-    public boolean createNewGame(String thisPlayerUsername, String otherPlayerUsername)
+    public boolean createNewGame(int p1id, String otherPlayerUsername)
     {
+        // TODO: Figure out a way to import the Tile functions here so that you can generate the tile bag for the game.
+        // You will need to include it when inserting into the db...
         try {
-            /* First find the player id for this player username */
+
             Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT user_id FROM users where username = \"" + thisPlayerUsername + "\"");
+            ResultSet resultSet;
 
-            if (!resultSet.next())
-                return false;
-            int p1id = resultSet.getInt(1);
-
-            resultSet.close();
-
-            /* Next find the player id for the opponent username */
+            /* Find the player id for the opponent username */
             resultSet = statement.executeQuery("SELECT user_id FROM users where username = \"" + otherPlayerUsername + "\"");
             if (!resultSet.next())
                 return false;
-            int p2id = resultSet.getInt(1);
+            int p2id = resultSet.getInt("user_id");
 
             int p1score = 0;
             int p2score = 0;
@@ -174,7 +173,8 @@ public class DbService {
 
             /* Insert a new game with {p1id, p2id, p1score, p2score, board} into the games table */
             PreparedStatement preparedStatement = connection
-                    .prepareStatement("INSERT into games(p1id, p2id, p1score, p2score, board, p1turn) VALUES (?,?,?,?,?,?)");
+                    .prepareStatement("INSERT into games(p1id, p2id, p1score, p2score, board, p1turn) " +
+                            "VALUES (?,?,?,?,?,?)");
             preparedStatement.setInt(1, p1id);
             preparedStatement.setInt(2, p2id);
             preparedStatement.setInt(3, p1score);
@@ -197,56 +197,102 @@ public class DbService {
     /**
      * Retrieves an array of the GameListItems representing games involving the player with the provided username.
      *
-     * @param username the player's username
-     * @return an array of the games in which they're participating
+     * @param playerId the participating player's user id
+     * @return an array of the games in which they're participating if available, Optional.empty if not in any games / error
      */
-    public GameListItem[] getGamesForPlayer(String username)
+    public Optional<GameListItem[]> getGamesForPlayer(int playerId)
     {
         try {
             /* First get the player id for the provided username */
             List<GameListItem> games = new ArrayList<>();
-            Statement statement;
-            statement = connection.createStatement();
+            Statement statement = connection.createStatement();
 
             /* Get all details about games in which they're either the first or second player */
-            ResultSet resultSet = statement.executeQuery("SELECT user_id FROM users where username = \"" + username + "\"");
-
-            /* If the id can't be determined, error */
-            if (!resultSet.next())
-                return (GameListItem[]) games.toArray();
-            int playerId = resultSet.getInt(1);
-
-            resultSet = statement.executeQuery("SELECT * FROM games where p1id = " + playerId + " OR p2id = " + playerId);
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM games where p1id = " + playerId + " OR p2id = " + playerId);
 
             while (resultSet.next())
             {
-                int game_id = resultSet.getInt(1);
-                int other_player_id = resultSet.getInt(2);
-                int clientScore = resultSet.getInt(4);
-                int otherScore = resultSet.getInt(5);
+                int game_id = resultSet.getInt("game_id");
+                int other_player_id = resultSet.getInt("p1id");
+                int clientScore = resultSet.getInt("p1score");
+                int otherScore = resultSet.getInt("p2score");
                 if (other_player_id == playerId)
                 {
-                    other_player_id = resultSet.getInt(3);
-                    clientScore = resultSet.getInt(5);
-                    otherScore = resultSet.getInt(4);
+                    other_player_id = resultSet.getInt("p2id");
+                    clientScore = resultSet.getInt("p2score");
+                    otherScore = resultSet.getInt("p1score");
                 }
 
                 // Get opponent name from opponent id.
                 Statement s2 = connection.createStatement();
                 ResultSet rs2 = s2.executeQuery("SELECT username FROM users WHERE user_id = " + other_player_id);
                 if (!rs2.next())
-                    return null;
-                String opponentName = rs2.getString(1);
+                    return Optional.empty();
+                String opponentName = rs2.getString("username");
 
                 // Add elements of row to a new GameListItem and add the new GameListItem to the arraylist.
                 games.add(new GameListItem(opponentName, game_id, clientScore, otherScore));
             }
-            return games.isEmpty() ? null : games.toArray(new GameListItem[0]);
+            return games.isEmpty() ? Optional.empty() : Optional.of(games.toArray(new GameListItem[0]));
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return Optional.empty();
+    }
+
+    /**
+     * Retrieves the game by its id for the provided player.
+     *
+     * @param playerId the requesting player's user id
+     * @param game_id the requested game's game id
+     * @return an optional with the game state
+     */
+    public Optional<GameStateItem> getGameById(int playerId, int game_id)
+    {
+        // TODO: Add items to retrieve the player's rack and attach it to the GameItem instance.
+        try {
+            Statement statement = connection.createStatement();
+
+            /* Get all details about games in which they're either the first or second player */
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM games where game_id = " + game_id);
+
+            /* If the game doesn't exist, or if the user isn't certified to view the game, terminate the request */
+            if (!resultSet.next() ||
+                    (resultSet.getInt("p1id") != playerId && resultSet.getInt("p2id") != playerId)
+                    )
+                return Optional.empty();
+
+            int other_player_id = resultSet.getInt("p1id");
+            int clientScore = resultSet.getInt("p1score");
+            int otherScore = resultSet.getInt("p2score");
+            if (other_player_id == playerId)
+            {
+                other_player_id = resultSet.getInt("p2id");
+                clientScore = resultSet.getInt("p2score");
+                otherScore = resultSet.getInt("p1score");
+            }
+
+            String boardString = resultSet.getString("board");
+            char[][] board = new char[15][15];
+            for (int i = 0; i < 15; i++)
+                for (int j = 0; j < 15; j++)
+                {
+                    board[i][j] = boardString.charAt(i * 15 + j);
+                }
+            boolean p1turn = resultSet.getBoolean("p1turn");
+
+            // Get opponent name from opponent id.
+            Statement s2 = connection.createStatement();
+            ResultSet rs2 = s2.executeQuery("SELECT username FROM users WHERE user_id = " + other_player_id);
+            if (!rs2.next())
+                return Optional.empty();
+            String opponentName = rs2.getString(1);
+//            return Optional.of(new GameStateItem(opponentName, game_id, clientScore, otherScore, board));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
     }
 
 }

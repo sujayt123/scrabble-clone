@@ -10,6 +10,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <dependencies>
+
+        <dependency>
+            <groupId>groupId</groupId>
+            <artifactId>client</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>javax.websocket</groupId>
             <artifactId>javax.websocket-api</artifactId>
