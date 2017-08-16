@@ -2,6 +2,8 @@ package service;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -35,6 +37,10 @@ public class DbServiceTest {
         assertTrue(db.createNewGame("hello", "CPU"));
         assertTrue(db.createNewGame("hello2", "CPU"));
         assertTrue(db.createNewGame("hello2", "hello"));
+
+        System.out.println(Arrays.toString(db.getGamesForPlayer("hello")));
+        System.out.println(Arrays.toString(db.getGamesForPlayer("hello2")));
+        System.out.println(Arrays.toString(db.getGamesForPlayer("CPU")));
 
         /* Remove dummy accounts */
         assertFalse(db.deleteExistingAccount("hello", "world2"));

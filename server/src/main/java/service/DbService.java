@@ -1,9 +1,13 @@
 package service;
 
+import communication.msg.server.GameListItem;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 import static org.mindrot.jbcrypt.BCrypt.*;
@@ -136,9 +140,9 @@ public class DbService {
      * Creates a new game involving users with usernames thisPlayerUsername and otherPlayerUsername if they exist,
      * else returns false.
      *
-     * @param thisPlayerUsername
-     * @param otherPlayerUsername
-     * @return
+     * @param thisPlayerUsername the creating player's username
+     * @param otherPlayerUsername the username of his/her opponent ("CPU" for cpu player)
+     * @return true if the game was successfully made, false otherwise
      */
     public boolean createNewGame(String thisPlayerUsername, String otherPlayerUsername)
     {
@@ -188,6 +192,61 @@ public class DbService {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Retrieves an array of the GameListItems representing games involving the player with the provided username.
+     *
+     * @param username the player's username
+     * @return an array of the games in which they're participating
+     */
+    public GameListItem[] getGamesForPlayer(String username)
+    {
+        try {
+            /* First get the player id for the provided username */
+            List<GameListItem> games = new ArrayList<>();
+            Statement statement;
+            statement = connection.createStatement();
+
+            /* Get all details about games in which they're either the first or second player */
+            ResultSet resultSet = statement.executeQuery("SELECT user_id FROM users where username = \"" + username + "\"");
+
+            /* If the id can't be determined, error */
+            if (!resultSet.next())
+                return (GameListItem[]) games.toArray();
+            int playerId = resultSet.getInt(1);
+
+            resultSet = statement.executeQuery("SELECT * FROM games where p1id = " + playerId + " OR p2id = " + playerId);
+
+            while (resultSet.next())
+            {
+                int game_id = resultSet.getInt(1);
+                int other_player_id = resultSet.getInt(2);
+                int clientScore = resultSet.getInt(4);
+                int otherScore = resultSet.getInt(5);
+                if (other_player_id == playerId)
+                {
+                    other_player_id = resultSet.getInt(3);
+                    clientScore = resultSet.getInt(5);
+                    otherScore = resultSet.getInt(4);
+                }
+
+                // Get opponent name from opponent id.
+                Statement s2 = connection.createStatement();
+                ResultSet rs2 = s2.executeQuery("SELECT username FROM users WHERE user_id = " + other_player_id);
+                if (!rs2.next())
+                    return null;
+                String opponentName = rs2.getString(1);
+
+                // Add elements of row to a new GameListItem and add the new GameListItem to the arraylist.
+                games.add(new GameListItem(opponentName, game_id, clientScore, otherScore));
+            }
+            return games.isEmpty() ? null : games.toArray(new GameListItem[0]);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
