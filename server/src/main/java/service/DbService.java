@@ -17,10 +17,8 @@ public class DbService {
 
     /**
      * Constructor. Establishes a connection to the database
-     * @param driverString
-     * @param jdbcURL
      */
-    public DbService(String driverString, String jdbcURL)
+    public DbService()
     {
         String dbUrl, dbname, username, password;
         try (BufferedReader br = new BufferedReader(new FileReader("src/main/resources/dbConfig.txt"))) {
@@ -30,7 +28,8 @@ public class DbService {
             username = br.readLine().trim();
             password = br.readLine().trim();
             try {
-                connection = DriverManager.getConnection(dbUrl, username, password);
+                System.out.println(dbUrl);
+                connection = DriverManager.getConnection(dbUrl + '/' + dbname, username, password);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -92,10 +91,42 @@ public class DbService {
             ResultSet resultSet = statement.executeQuery("SELECT password FROM users where username = \"" + username + "\"");
 
             /* Check if the user with username ${username} already exists in the system */
-            return resultSet.next() && checkpw(password, resultSet.getString(1));
+            boolean retVal = resultSet.next() && checkpw(password, resultSet.getString(1));
+            statement.close();
+            resultSet.close();
+            return retVal;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
+
+    /**
+     * Deletes a new account in the system on behalf of the user.
+     * @param username the provided username
+     * @param password the provided unsalted password
+     * @return
+     */
+    public boolean deleteExistingAccount(String username, String password)
+    {
+        try {
+            /* Does the user have the appropriate credentials to delete the account? */
+            if (!login(username, password))
+                return false;
+
+            /* Delete this user from the users table */
+            PreparedStatement preparedStatement = connection
+                    .prepareStatement("DELETE from users where username = ?");
+            preparedStatement.setString(1, username);
+            preparedStatement.executeUpdate();
+
+            preparedStatement.close();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
