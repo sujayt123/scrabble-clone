@@ -98,6 +98,9 @@
         <version>2.19</version>
         <configuration>
             <argLine> ${argLine} -Xmx1500m</argLine>
+            <excludes>
+                <exclude>**/DbServiceTest.java</exclude>
+            </excludes>
         </configuration>
       </plugin>
             <plugin>
