@@ -3,6 +3,7 @@ package service;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 
@@ -14,8 +15,8 @@ public class DbServiceTest {
     public void tests() throws Exception {
         DbService db = new DbService();
 
-        db.deleteExistingAccount("hello", "world");
-        db.deleteExistingAccount("hello2", "world2");
+        db.deleteExistingAccount("hello");
+        db.deleteExistingAccount("hello2");
 
         /* Set up dummy accounts */
         assertTrue(db.createNewAccount("hello", "world"));
@@ -26,27 +27,31 @@ public class DbServiceTest {
 
 
         /* Log in to dummy accounts */
-        assertFalse(db.login("hello", "world2"));
-        assertTrue(db.login("hello", "world"));
+        Optional<Integer> hello_id_opt_fail = db.login("hello", "world2");
+        assertFalse(hello_id_opt_fail.isPresent());
 
-        assertFalse(db.login("hello2", "world"));
-        assertTrue(db.login("hello2", "world2"));
+        Optional<Integer> hello_id_opt_works = db.login("hello", "world");
+        assertTrue(hello_id_opt_works.isPresent());
+
+        Optional<Integer> hello2_id_opt_fail = db.login("hello2", "world");
+        assertFalse(hello2_id_opt_fail.isPresent());
+
+        Optional<Integer> hello2_id_opt_works = db.login("hello2", "world2");
+        assertTrue(hello2_id_opt_works.isPresent());
 
         /* Create games involving dummy players */
-        assertFalse(db.createNewGame("hello", "notaRealPlayer"));
-        assertTrue(db.createNewGame("hello", "CPU"));
-        assertTrue(db.createNewGame("hello2", "CPU"));
-        assertTrue(db.createNewGame("hello2", "hello"));
+        assertFalse(db.createNewGame(hello_id_opt_works.get(), "notaRealPlayer"));
+        assertTrue(db.createNewGame(hello_id_opt_works.get(), "CPU"));
+        assertTrue(db.createNewGame(hello2_id_opt_works.get(), "CPU"));
+        assertTrue(db.createNewGame(hello2_id_opt_works.get(), "hello"));
 
-        System.out.println(Arrays.toString(db.getGamesForPlayer("hello")));
-        System.out.println(Arrays.toString(db.getGamesForPlayer("hello2")));
-        System.out.println(Arrays.toString(db.getGamesForPlayer("CPU")));
+        System.out.println(Arrays.toString(db.getGamesForPlayer(hello_id_opt_works.get()).get()));
+        System.out.println(Arrays.toString(db.getGamesForPlayer(hello2_id_opt_works.get()).get()));
+        System.out.println(Arrays.toString(db.getGamesForPlayer(1).get()));
 
         /* Remove dummy accounts */
-        assertFalse(db.deleteExistingAccount("hello", "world2"));
-        assertFalse(db.deleteExistingAccount("hello2", "world"));
-        assertTrue(db.deleteExistingAccount("hello", "world"));
-        assertTrue(db.deleteExistingAccount("hello2", "world2"));
+        assertTrue(db.deleteExistingAccount(hello_id_opt_works.get()));
+        assertTrue(db.deleteExistingAccount(hello2_id_opt_works.get()));
 
     }
 

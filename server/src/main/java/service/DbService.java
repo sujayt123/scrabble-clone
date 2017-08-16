@@ -2,14 +2,15 @@ package service;
 
 import communication.msg.server.GameListItem;
 import communication.msg.server.GameStateItem;
+import scrabble.Tile;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.IntStream;
+
 
 import static org.mindrot.jbcrypt.BCrypt.*;
 
@@ -140,6 +141,32 @@ public class DbService {
     }
 
     /**
+     * Deletes an account (and all associated games) in the system on behalf of the user.
+     *
+     * Warning: only use this function in testing!
+     *
+     * @param username the username of the user to delete
+     * @return true if the delete was successful, false if it was not
+     */
+    public boolean deleteExistingAccount(String username)
+    {
+        try {
+            /* Delete this user from the users table */
+            PreparedStatement preparedStatement = connection
+                    .prepareStatement("DELETE from users where username = ?");
+            preparedStatement.setString(1, username);
+            preparedStatement.executeUpdate();
+
+            preparedStatement.close();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
      * Creates a new game involving users with usernames thisPlayerUsername and otherPlayerUsername if they exist,
      * else returns false.
      *
@@ -149,8 +176,6 @@ public class DbService {
      */
     public boolean createNewGame(int p1id, String otherPlayerUsername)
     {
-        // TODO: Figure out a way to import the Tile functions here so that you can generate the tile bag for the game.
-        // You will need to include it when inserting into the db...
         try {
 
             Statement statement = connection.createStatement();
@@ -171,16 +196,30 @@ public class DbService {
                 board.append(' ');
             }
 
+            Queue<Character> tiles = Tile.getTileBagForGame();
+            StringBuilder playerHand = new StringBuilder();
+            StringBuilder oppHand = new StringBuilder();
+            StringBuilder tileString = new StringBuilder();
+
+            for(int i = 0; i < 7; i++)
+            {
+                playerHand.append(tiles.poll());
+                oppHand.append(tiles.poll());
+            }
+
+            tiles.forEach(tileString::append);
+
             /* Insert a new game with {p1id, p2id, p1score, p2score, board} into the games table */
             PreparedStatement preparedStatement = connection
-                    .prepareStatement("INSERT into games(p1id, p2id, p1score, p2score, board, p1turn) " +
-                            "VALUES (?,?,?,?,?,?)");
+                    .prepareStatement("INSERT into games(p1id, p2id, p1hand, p2hand, tilebag, board, p1turn) " +
+                            "VALUES (?,?,?,?,?,?,?)");
             preparedStatement.setInt(1, p1id);
             preparedStatement.setInt(2, p2id);
-            preparedStatement.setInt(3, p1score);
-            preparedStatement.setInt(4, p2score);
-            preparedStatement.setString(5, board.toString());
-            preparedStatement.setBoolean(6, true);
+            preparedStatement.setString(3, playerHand.toString());
+            preparedStatement.setString(4, oppHand.toString());
+            preparedStatement.setString(5, tileString.toString());
+            preparedStatement.setString(6, board.toString());
+            preparedStatement.setBoolean(7, true);
 
             preparedStatement.executeUpdate();
 
@@ -214,13 +253,13 @@ public class DbService {
             {
                 int game_id = resultSet.getInt("game_id");
                 int other_player_id = resultSet.getInt("p1id");
-                int clientScore = resultSet.getInt("p1score");
-                int otherScore = resultSet.getInt("p2score");
+                int clientScore = resultSet.getInt("p2score");
+                int otherScore = resultSet.getInt("p1score");
                 if (other_player_id == playerId)
                 {
                     other_player_id = resultSet.getInt("p2id");
-                    clientScore = resultSet.getInt("p2score");
-                    otherScore = resultSet.getInt("p1score");
+                    clientScore = resultSet.getInt("p1score");
+                    otherScore = resultSet.getInt("p2score");
                 }
 
                 // Get opponent name from opponent id.
@@ -250,7 +289,7 @@ public class DbService {
      */
     public Optional<GameStateItem> getGameById(int playerId, int game_id)
     {
-        // TODO: Add items to retrieve the player's rack and attach it to the GameItem instance.
+        // TODO: Test
         try {
             Statement statement = connection.createStatement();
 
@@ -264,13 +303,15 @@ public class DbService {
                 return Optional.empty();
 
             int other_player_id = resultSet.getInt("p1id");
-            int clientScore = resultSet.getInt("p1score");
-            int otherScore = resultSet.getInt("p2score");
+            int clientScore = resultSet.getInt("p2score");
+            int otherScore = resultSet.getInt("p1score");
+            String playerRack = resultSet.getString("p2hand");
             if (other_player_id == playerId)
             {
                 other_player_id = resultSet.getInt("p2id");
                 clientScore = resultSet.getInt("p2score");
                 otherScore = resultSet.getInt("p1score");
+                playerRack = resultSet.getString("p1hand");
             }
 
             String boardString = resultSet.getString("board");
@@ -280,6 +321,7 @@ public class DbService {
                 {
                     board[i][j] = boardString.charAt(i * 15 + j);
                 }
+            String mostRecentWord = resultSet.getString("mostRecentWord");
             boolean p1turn = resultSet.getBoolean("p1turn");
 
             // Get opponent name from opponent id.
@@ -288,7 +330,7 @@ public class DbService {
             if (!rs2.next())
                 return Optional.empty();
             String opponentName = rs2.getString(1);
-//            return Optional.of(new GameStateItem(opponentName, game_id, clientScore, otherScore, board));
+            return Optional.of(new GameStateItem(opponentName, game_id, clientScore, otherScore, board, playerRack, mostRecentWord, p1turn));
         } catch (SQLException e) {
             e.printStackTrace();
         }

@@ -9,12 +9,18 @@ public class GameStateItem extends GameListItem {
 
     private char[][] board;
 
-    private char[] clientHand;
+    private String clientHand;
 
-    public GameStateItem(String opponentName, int game_id, int clientScore, int opponentScore, char[][] board, char[] clientHand) {
+    private String mostRecentWord;
+
+    private boolean p1turn;
+
+    public GameStateItem(String opponentName, int game_id, int clientScore, int opponentScore, char[][] board, String clientHand, String mostRecentWord, boolean p1turn) {
         super(opponentName, game_id, clientScore, opponentScore);
         this.board = board;
         this.clientHand = clientHand;
+        this.mostRecentWord = mostRecentWord;
+        this.p1turn = p1turn;
     }
 
     @Override
@@ -25,7 +31,9 @@ public class GameStateItem extends GameListItem {
         {
             out += Arrays.toString(board[i]);
         }
-        out += "\nhand\n" + Arrays.toString(clientHand);
+        out += "\nhand\n" + clientHand;
+        out += "\nmostRecentWord" + ((mostRecentWord == null) ? "(none)" : mostRecentWord);
+        out +="\n p1turn: " + p1turn;
         return out;
     }
 
@@ -37,11 +45,29 @@ public class GameStateItem extends GameListItem {
         this.board = board;
     }
 
-    public char[] getClientHand() {
+    public String getClientHand() {
         return clientHand;
     }
 
-    public void setClientHand(char[] clientHand) {
+    public void setClientHand(String clientHand) {
         this.clientHand = clientHand;
     }
+
+
+    public String getMostRecentWord() {
+        return mostRecentWord;
+    }
+
+    public void setMostRecentWord(String mostRecentWord) {
+        this.mostRecentWord = mostRecentWord;
+    }
+
+    public boolean isP1turn() {
+        return p1turn;
+    }
+
+    public void setP1turn(boolean p1turn) {
+        this.p1turn = p1turn;
+    }
+
 }
