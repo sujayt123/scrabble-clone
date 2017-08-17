@@ -1,7 +1,8 @@
-package communication.msg.client;
+package com.sujayt123.communication.msg.client;
+
+import com.sujayt123.communication.msg.Message;
 
 import com.google.gson.JsonElement;
-import communication.msg.Message;
 import com.google.gson.Gson;
 
 /**

@@ -1,13 +1,11 @@
-package communication.msg;
+package com.sujayt123.communication.msg;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import communication.msg.server.StringMessage;
 
 /**
- * A generic message for communication between the client and server.
+ * A generic message for main.java.com.sujayt123.communication between the client and server.
  *
- * To enable reliable communication, we must enforce a strict contract between the nature of
+ * To enable reliable main.java.com.sujayt123.communication, we must enforce a strict contract between the nature of
  * the message (as indicated by the MessageType) and the data it contains.
  *
  * Contract:

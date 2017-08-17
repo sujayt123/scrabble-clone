@@ -1,6 +1,6 @@
-package communication.msg.server;
+package com.sujayt123.communication.msg.server;
 
-import communication.msg.Message;
+import com.sujayt123.communication.msg.Message;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 

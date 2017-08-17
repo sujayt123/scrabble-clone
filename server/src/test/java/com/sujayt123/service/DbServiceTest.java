@@ -1,4 +1,4 @@
-package service;
+package com.sujayt123.service;
 
 import org.junit.Test;
 

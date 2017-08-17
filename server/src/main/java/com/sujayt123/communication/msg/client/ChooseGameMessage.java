@@ -1,6 +1,6 @@
-package communication.msg.client;
+package com.sujayt123.communication.msg.client;
 
-import communication.msg.Message;
+import com.sujayt123.communication.msg.Message;
 
 import java.util.UUID;
 

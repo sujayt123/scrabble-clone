@@ -1,16 +1,17 @@
-package service;
+package com.sujayt123.service;
 
-import communication.msg.server.GameListItem;
-import communication.msg.server.GameStateItem;
 import scrabble.Tile;
+import com.sujayt123.communication.msg.server.GameStateItem;
+import com.sujayt123.communication.msg.server.GameListItem;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
-import java.util.*;
-import java.util.stream.IntStream;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
 
 import static org.mindrot.jbcrypt.BCrypt.*;
 

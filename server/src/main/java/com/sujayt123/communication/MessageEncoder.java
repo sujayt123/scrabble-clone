@@ -1,6 +1,6 @@
-package communication;
+package com.sujayt123.communication;
 
-import communication.msg.Message;
+import com.sujayt123.communication.msg.Message;
 
 import javax.websocket.EncodeException;
 import javax.websocket.Encoder;

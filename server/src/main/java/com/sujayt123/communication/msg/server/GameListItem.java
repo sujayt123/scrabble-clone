@@ -1,6 +1,4 @@
-package communication.msg.server;
-
-import java.util.UUID;
+package com.sujayt123.communication.msg.server;
 
 /**
  * Created by sujay on 8/15/17.

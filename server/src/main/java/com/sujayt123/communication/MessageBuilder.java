@@ -1,13 +1,11 @@
-package communication;
+package com.sujayt123.communication;
+
+import com.sujayt123.communication.msg.Message;
 
 import com.google.gson.Gson;
-import communication.msg.Message;
-
 import javax.json.Json;
 import javax.json.JsonObject;
 import java.io.StringReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 
 /**

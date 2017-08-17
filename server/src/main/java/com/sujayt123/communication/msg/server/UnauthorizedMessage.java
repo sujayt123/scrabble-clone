@@ -1,6 +1,6 @@
-package communication.msg.server;
+package com.sujayt123.communication.msg.server;
 
-import communication.msg.Message;
+import com.sujayt123.communication.msg.Message;
 
 /**
  * Created by sujay on 8/15/17.

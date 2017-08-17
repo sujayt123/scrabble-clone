@@ -1,0 +1,28 @@
+Show user the "home scene"
+Login: Username / Password Text fields
+Register For Account
+
+upon register for account:
+create a new Player in the table of players in the database
+list of games in which user participates should initially be empty
+generate a new salt for this user using the SecureRandom java object
+store bcrypt(salt || password) in hashed_password field
+
+upon login submission:
+validate that bcrypt(salt || provided_password) == hashed_password[user]
+Start a "session" that identifies the user to the server upon subsequent requests
+
+user can select a game from games list, or select a new game from dropdown (vs AI, vs other player)
+
+upon selection of new game:
+submit request to server to create a new game (set 1player member of game to true depending on user selection)
+server should create a new entry in the Game table
+server should indicate in Player table that this player is participating in that game
+client should "enter" the game
+// set "current game" variable on client side to the game's unique ID returned by server
+
+upon entering a game:
+send back result of chosen game's "id" to the server
+attach the current game id to the session
+
+gameplay proceeds as normal except game logic is server side for the most part

@@ -1,4 +1,4 @@
-package communication.msg.server;
+package com.sujayt123.communication.msg.server;
 
 import java.util.Arrays;
 
