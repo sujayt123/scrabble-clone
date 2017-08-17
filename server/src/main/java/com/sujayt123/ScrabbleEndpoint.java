@@ -26,7 +26,7 @@ import com.sujayt123.service.DbService;
 @ServerEndpoint(value = "/connect", encoders = {MessageEncoder.class}, decoders = {MessageDecoder.class})
 public class ScrabbleEndpoint {
 
-    private static Logger logr = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    public static Logger logr = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     private static DbService dbService = new DbService();
 

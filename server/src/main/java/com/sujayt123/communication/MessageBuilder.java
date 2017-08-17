@@ -20,7 +20,7 @@ public class MessageBuilder {
         JsonObject jsonObject = Json
                 .createReader(new StringReader(s)).readObject();
         // ... so that you can determine the class type.
-        String classType = jsonObject.getString("type");
+        String classType = jsonObject.getString("type").split(" ")[1];
 
         /*
          * Once you know the class type, use Gson in conjunction

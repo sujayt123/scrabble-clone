@@ -49,6 +49,7 @@
         };
 
         webSocket.onmessage = function(event){
+            webSocket.send(JSON.stringify({"type": "class com.sujayt123.communication.msg.client.CreateAccountMessage", "username": "user", "password": "pass"}));
             writeResponse(event.data);
         };
 
@@ -70,8 +71,10 @@
     }
 
     function writeResponse(text){
-        messages.innerHTML += "<br/>" + text;
+        console.log(text);
     }
+
+
 
 </script>
 
