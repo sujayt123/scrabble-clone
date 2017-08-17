@@ -35,4 +35,13 @@ public abstract class Message {
         Gson gson = new Gson();
         return gson.toJson(this, getClass());
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
 }
