@@ -1,5 +1,6 @@
 package com.sujayt123;
 
+import com.google.gson.Gson;
 import com.sujayt123.communication.msg.Message;
 import com.sujayt123.communication.MessageDecoder;
 import com.sujayt123.communication.MessageEncoder;
@@ -51,6 +52,7 @@ public class ScrabbleEndpoint {
         {
             case "class com.sujayt123.communication.msg.client.CreateAccountMessage":
                 CreateAccountMessage cam = (CreateAccountMessage) m;
+                logr.log(Level.INFO, new Gson().toJson(cam, com.sujayt123.communication.msg.client.CreateAccountMessage.class));
                 if (dbService.createNewAccount(cam.getUsername(), cam.getPassword()))
                 {
                     session.getBasicRemote().sendObject(new AuthorizedMessage());

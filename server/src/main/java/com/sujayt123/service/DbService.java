@@ -4,15 +4,19 @@ import scrabble.Tile;
 import com.sujayt123.communication.msg.server.GameStateItem;
 import com.sujayt123.communication.msg.server.GameListItem;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.logging.Level;
 
+import static com.sujayt123.ScrabbleEndpoint.logr;
 import static org.mindrot.jbcrypt.BCrypt.*;
 
 /**
@@ -31,20 +35,42 @@ public class DbService {
     public DbService()
     {
         String dbUrl, dbname, username, password;
-        try (BufferedReader br = new BufferedReader(new FileReader("src/main/resources/dbConfig.txt"))) {
+
+        boolean runningInWebContainer = false;
+
+        //TODO Having some issues reading dbconfig from file
+
+        try {
+            new InitialContext().lookup("java:comp/env");
+            runningInWebContainer = true;
+            /// do some servlet specific config
+        } catch (NamingException ex) {
+            /// do some standalone config
+        }
+
+        InputStream inputStream = null;
+        try {
+            inputStream = runningInWebContainer ? this.getClass().getClassLoader().getResourceAsStream("/com/sujayt123/resources/dbConfig.txt"):
+                    Files.newInputStream(Paths.get("src/main/resources/dbConfig.txt"));
+        } catch (IOException e) {
+            logr.log(Level.INFO, "IO EXCEPTION INPUT STREAM");
+        }
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             dbUrl = br.readLine().trim();
             dbname = br.readLine().trim();
             username = br.readLine().trim();
             password = br.readLine().trim();
             try {
-                System.out.println(dbUrl);
+                System.out.println(dbUrl + '\n' + dbname + '\n' + username + '\n' + password);
                 connection = DriverManager.getConnection(dbUrl + '/' + dbname, username, password);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         } catch (IOException e) {
-        e.printStackTrace();
+            logr.log(Level.INFO, "IO Exception");
+            e.printStackTrace();
         }
     }
 

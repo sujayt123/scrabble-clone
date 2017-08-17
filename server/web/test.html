@@ -44,12 +44,11 @@
             // Leave a comment if you know the answer.
             if(event.data === undefined)
                 return;
-
+            // webSocket.send(JSON.stringify({"type": "class com.sujayt123.communication.msg.client.CreateAccountMessage", "username": "user", "password": "pass"}));
             writeResponse(event.data);
         };
 
         webSocket.onmessage = function(event){
-            webSocket.send(JSON.stringify({"type": "class com.sujayt123.communication.msg.client.CreateAccountMessage", "username": "user", "password": "pass"}));
             writeResponse(event.data);
         };
 
