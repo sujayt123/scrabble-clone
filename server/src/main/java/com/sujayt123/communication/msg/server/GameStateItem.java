@@ -13,14 +13,14 @@ public class GameStateItem extends GameListItem {
 
     private String mostRecentWord;
 
-    private boolean p1turn;
+    private boolean clientTurn;
 
     public GameStateItem(String opponentName, int game_id, int clientScore, int opponentScore, char[][] board, String clientHand, String mostRecentWord, boolean p1turn) {
         super(opponentName, game_id, clientScore, opponentScore);
         this.board = board;
         this.clientHand = clientHand;
         this.mostRecentWord = mostRecentWord;
-        this.p1turn = p1turn;
+        this.clientTurn = p1turn;
     }
 
     @Override
@@ -33,7 +33,7 @@ public class GameStateItem extends GameListItem {
         }
         out += "\nhand\n" + clientHand;
         out += "\nmostRecentWord" + ((mostRecentWord == null) ? "(none)" : mostRecentWord);
-        out +="\n p1turn: " + p1turn;
+        out +="\n clientTurn: " + clientTurn;
         return out;
     }
 
@@ -62,12 +62,12 @@ public class GameStateItem extends GameListItem {
         this.mostRecentWord = mostRecentWord;
     }
 
-    public boolean isP1turn() {
-        return p1turn;
+    public boolean isClientTurn() {
+        return clientTurn;
     }
 
-    public void setP1turn(boolean p1turn) {
-        this.p1turn = p1turn;
+    public void setClientTurn(boolean clientTurn) {
+        this.clientTurn = clientTurn;
     }
 
 }

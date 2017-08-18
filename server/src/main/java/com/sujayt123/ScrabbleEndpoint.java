@@ -1,6 +1,5 @@
 package com.sujayt123;
 
-import com.google.gson.Gson;
 import com.sujayt123.communication.msg.Message;
 import com.sujayt123.communication.MessageDecoder;
 import com.sujayt123.communication.MessageEncoder;
@@ -8,26 +7,35 @@ import com.sujayt123.communication.MessageEncoder;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.sujayt123.communication.msg.client.*;
 import com.sujayt123.communication.msg.server.*;
 import com.sujayt123.service.DbService;
+import scrabble.Trie;
 
+import static util.FunctionHelper.*;
+import static scrabble.Board.*;
 
 /**
  * Created by sujay on 8/14/17.
+ *
+ * Policy:
+ * Upon each completed turn, send a push notification to each active player of the new
+ * game state. A client can choose to ignore the notification if the player is participating
+ * in a different game, but more likely it should update the GameListItem list view with the
+ * other game's updated information. If the player is participating in the game for which
+ * he gets a notification, the client should update the game view.
+ *
  */
 
 @ServerEndpoint(value = "/connect", encoders = {MessageEncoder.class}, decoders = {MessageDecoder.class})
 public class ScrabbleEndpoint {
 
     public static Logger logr = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    private static Trie trie = new Trie();
 
     private static DbService dbService = new DbService();
 
@@ -38,11 +46,11 @@ public class ScrabbleEndpoint {
 
     public Map<Session, Integer> sessionToUserIdMap = Collections.synchronizedMap(new HashMap<>());
 
+
     @OnOpen
     public void onOpen(Session session)
     {
         logr.log(Level.INFO, "Opened a new session with a websocket client.");
-        System.out.println("The method getClass().toString() on a stringmessage returns: " + new StringMessage("").getType());
     }
 
     @OnMessage
@@ -52,9 +60,10 @@ public class ScrabbleEndpoint {
         {
             case "class com.sujayt123.communication.msg.client.CreateAccountMessage":
                 CreateAccountMessage cam = (CreateAccountMessage) m;
-                logr.log(Level.INFO, new Gson().toJson(cam, com.sujayt123.communication.msg.client.CreateAccountMessage.class));
-                if (dbService.createNewAccount(cam.getUsername(), cam.getPassword()))
+                Optional<Integer> createRetVal = dbService.createNewAccount(cam.getUsername(), cam.getPassword());
+                if (createRetVal.isPresent())
                 {
+                    sessionToUserIdMap.put(session, createRetVal.get());
                     session.getBasicRemote().sendObject(new AuthorizedMessage());
                     session.getBasicRemote().sendObject(new GameListMessage(new GameListItem[0]));
                 }
@@ -79,10 +88,18 @@ public class ScrabbleEndpoint {
                 }
                 break;
             case "class com.sujayt123.communication.msg.client.ChooseGameMessage":
+
+                if (!sessionToUserIdMap.containsKey(session))
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                    return;
+                }
+
                 ChooseGameMessage chooseGameMessage = (ChooseGameMessage) m;
                 Optional<GameStateItem> getGameRetVal = dbService.getGameById(sessionToUserIdMap.get(session), chooseGameMessage.getGame_id());
                 if (getGameRetVal.isPresent())
                 {
+                    // Send information about the game to the client.
                     session.getBasicRemote().sendObject(new GameStateMessage(getGameRetVal.get()));
                 }
                 else
@@ -91,6 +108,56 @@ public class ScrabbleEndpoint {
                 }
                 break;
             case "class com.sujayt123.communication.msg.client.MoveMessage":
+                MoveMessage moveMessage = (MoveMessage) m;
+                /*
+                 * Do server-side validation of incoming data.
+                 * This entails a few things:
+                 * 1. Ensure the current player is logged in.
+                 * 2. Ensure the current player has access to the game and
+                 *    is the one supposed to make the move.
+                 * 3. Ensure the boardBefore -> boardAfter transition represents
+                 *    a valid state change of the board.
+                 */
+
+                // Ensure current player is logged in.
+                if (!sessionToUserIdMap.containsKey(session))
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                    return;
+                }
+
+                // Ensure the current player has access to the game and that it's the current player's turn
+                Optional<GameStateItem> gameVal = dbService.getGameById(sessionToUserIdMap.get(session), moveMessage.getGame_id());
+
+                if (!gameVal.isPresent() || !gameVal.get().isClientTurn())
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                    return;
+                }
+
+                List<List<Character>> boardBeforeAttemptedMove =
+                        forEachBoardSquareAsNestedList((i, j) ->
+                                gameVal.get().getBoard()[i][j]);
+
+                List<List<Character>> boardAfterAttemptedMove =
+                        forEachBoardSquareAsNestedList((i, j) ->
+                                moveMessage.getBoardAfterAttemptedMove()[i][j]);
+
+                // Ensure the player's move was valid.
+                if (!validMove(boardBeforeAttemptedMove, boardAfterAttemptedMove, trie))
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                    return;
+                }
+
+                // Score the move.
+                int moveScore = scoreMove(boardBeforeAttemptedMove, boardAfterAttemptedMove);
+
+                // Update the database.
+
+                // Notify all active clients who are participating in the game of the update.
+
+
                 //TODO
                 break;
 
@@ -104,5 +171,8 @@ public class ScrabbleEndpoint {
     public void onClose(Session session)
     {
         logr.log(Level.INFO, "Closing session with websocket client.");
+        // Remove the client's session from the active session map.
+        sessionToUserIdMap.remove(session);
+
     }
 }

@@ -40,8 +40,4 @@ public abstract class Message {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
 }

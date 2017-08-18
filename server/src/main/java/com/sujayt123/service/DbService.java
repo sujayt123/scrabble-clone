@@ -78,9 +78,10 @@ public class DbService {
      * Creates a new account in the system on behalf of the user.
      * @param username the provided username
      * @param password the provided unsalted password
-     * @return true if a new account was created, false if not
+     * @return an optional of the user id of the account if it was successfully created,
+     *          optional.empty() if it was not
      */
-    public boolean createNewAccount(String username, String password)
+    public Optional<Integer> createNewAccount(String username, String password)
     {
         try {
 
@@ -90,7 +91,7 @@ public class DbService {
             /* Check if the user with username ${username} already exists in the system */
             if (resultSet.next())
             {
-                return false;
+                return Optional.empty();
             }
 
             /* Generate an encrypted password using bcrypt for this user */
@@ -103,14 +104,19 @@ public class DbService {
             preparedStatement.setString(2, hashed);
             preparedStatement.executeUpdate();
 
+            /* Now find the user id of the new user */
+            resultSet = statement.executeQuery("SELECT user_id FROM users where username = \"" + username + "\"");
+            resultSet.next();
+            int user_id = resultSet.getInt(1);
+
             statement.close();
             resultSet.close();
             preparedStatement.close();
-            return true;
+            return Optional.of(user_id);
 
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return Optional.empty();
         }
     }
 
@@ -336,8 +342,8 @@ public class DbService {
             if (other_player_id == playerId)
             {
                 other_player_id = resultSet.getInt("p2id");
-                clientScore = resultSet.getInt("p2score");
-                otherScore = resultSet.getInt("p1score");
+                clientScore = resultSet.getInt("p1score");
+                otherScore = resultSet.getInt("p2score");
                 playerRack = resultSet.getString("p1hand");
             }
 
@@ -349,7 +355,8 @@ public class DbService {
                     board[i][j] = boardString.charAt(i * 15 + j);
                 }
             String mostRecentWord = resultSet.getString("mostRecentWord");
-            boolean p1turn = resultSet.getBoolean("p1turn");
+            boolean clientTurn =
+                    (resultSet.getBoolean("p1turn")) == (playerId == resultSet.getInt("p1id"));
 
             // Get opponent name from opponent id.
             Statement s2 = connection.createStatement();
@@ -357,7 +364,7 @@ public class DbService {
             if (!rs2.next())
                 return Optional.empty();
             String opponentName = rs2.getString(1);
-            return Optional.of(new GameStateItem(opponentName, game_id, clientScore, otherScore, board, playerRack, mostRecentWord, p1turn));
+            return Optional.of(new GameStateItem(opponentName, game_id, clientScore, otherScore, board, playerRack, mostRecentWord, clientTurn));
         } catch (SQLException e) {
             e.printStackTrace();
         }
