@@ -1,6 +1,7 @@
 package com.sujayt123.service;
 
 import scrabble.Tile;
+
 import com.sujayt123.communication.msg.server.GameStateItem;
 import com.sujayt123.communication.msg.server.GameListItem;
 
@@ -10,12 +11,11 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.logging.Level;
 
+import static util.FunctionHelper.*;
+import static scrabble.Board.*;
 import static com.sujayt123.ScrabbleEndpoint.logr;
 import static org.mindrot.jbcrypt.BCrypt.*;
 
@@ -36,40 +36,14 @@ public class DbService {
     {
         String dbUrl, dbname, username, password;
 
-        boolean runningInWebContainer = false;
-
-        //TODO Having some issues reading dbconfig from file
-
+        dbUrl = System.getenv("dbUrl");
+        dbname = System.getenv("dbname");
+        username = System.getenv("username");
+        password = System.getenv("password");
         try {
-            new InitialContext().lookup("java:comp/env");
-            runningInWebContainer = true;
-            /// do some servlet specific config
-        } catch (NamingException ex) {
-            /// do some standalone config
-        }
-
-        InputStream inputStream = null;
-        try {
-            inputStream = runningInWebContainer ? this.getClass().getClassLoader().getResourceAsStream("/com/sujayt123/resources/dbConfig.txt"):
-                    Files.newInputStream(Paths.get("src/main/resources/dbConfig.txt"));
-        } catch (IOException e) {
-            logr.log(Level.INFO, "IO EXCEPTION INPUT STREAM");
-        }
-
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
-            String line;
-            dbUrl = br.readLine().trim();
-            dbname = br.readLine().trim();
-            username = br.readLine().trim();
-            password = br.readLine().trim();
-            try {
-                System.out.println(dbUrl + '\n' + dbname + '\n' + username + '\n' + password);
-                connection = DriverManager.getConnection(dbUrl + '/' + dbname, username, password);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } catch (IOException e) {
-            logr.log(Level.INFO, "IO Exception");
+            System.out.println(dbUrl + '\n' + dbname + '\n' + username + '\n' + password);
+            connection = DriverManager.getConnection(dbUrl + '/' + dbname, username, password);
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -220,9 +194,6 @@ public class DbService {
                 return false;
             int p2id = resultSet.getInt("user_id");
 
-            int p1score = 0;
-            int p2score = 0;
-
             StringBuilder board = new StringBuilder();
             for (int i = 0 ; i < 225; i++)
             {
@@ -244,17 +215,20 @@ public class DbService {
 
             /* Insert a new game with {p1id, p2id, p1score, p2score, board} into the games table */
             PreparedStatement preparedStatement = connection
-                    .prepareStatement("INSERT into games(p1id, p2id, p1hand, p2hand, tilebag, board, p1turn) " +
-                            "VALUES (?,?,?,?,?,?,?)");
+                    .prepareStatement("INSERT into games(p1id, p2id, p1hand, p2hand, tilebag, oldBoard, board, p1turn) " +
+                            "VALUES (?,?,?,?,?,?,?,?)");
             preparedStatement.setInt(1, p1id);
             preparedStatement.setInt(2, p2id);
             preparedStatement.setString(3, playerHand.toString());
             preparedStatement.setString(4, oppHand.toString());
             preparedStatement.setString(5, tileString.toString());
             preparedStatement.setString(6, board.toString());
-            preparedStatement.setBoolean(7, true);
+            preparedStatement.setString(7, board.toString());
+            preparedStatement.setBoolean(8, true);
 
             preparedStatement.executeUpdate();
+
+            statement.execute("SET sql_mode='PAD_CHAR_TO_FULL_LENGTH'");
 
             resultSet.close();
             statement.close();
@@ -348,13 +322,15 @@ public class DbService {
             }
 
             String boardString = resultSet.getString("board");
+            String oldBoardString = resultSet.getString("oldBoard");
+            char[][] oldBoard = new char[15][15];
             char[][] board = new char[15][15];
-            for (int i = 0; i < 15; i++)
-                for (int j = 0; j < 15; j++)
-                {
+            for (int i = 0; i < 15; i++) {
+                for (int j = 0; j < 15; j++) {
+                    oldBoard[i][j] = oldBoardString.charAt(i * 15 + j);
                     board[i][j] = boardString.charAt(i * 15 + j);
                 }
-            String mostRecentWord = resultSet.getString("mostRecentWord");
+            }
             boolean clientTurn =
                     (resultSet.getBoolean("p1turn")) == (playerId == resultSet.getInt("p1id"));
 
@@ -364,8 +340,132 @@ public class DbService {
             if (!rs2.next())
                 return Optional.empty();
             String opponentName = rs2.getString(1);
-            return Optional.of(new GameStateItem(opponentName, game_id, clientScore, otherScore, board, playerRack, mostRecentWord, clientTurn));
+            return Optional.of(new GameStateItem(opponentName, game_id, clientScore, otherScore, board, oldBoard, playerRack, clientTurn));
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Updates a game state in the system with the latest move.
+     *
+     * Requires:
+     * the game state to be validated prior to execution of this function
+     *
+     * @param playerId the id of the player who made the move
+     * @param gameId the id of the game to update
+     * @param boardBeforeMove the board before the player made a move
+     * @param boardAfterMove the board after the player made a move
+     * @return an optional of a map from playerId to the GameStateItems we should send following the update
+     */
+    public Optional<Map<Integer, GameStateItem>> updateGameState(int playerId, int gameId, List<List<Character>> boardBeforeMove, List<List<Character>> boardAfterMove)
+    {
+
+        /*
+         * To have an entry in the database consistent with the current state of the game,
+         * we must:
+         * 1. Retrieve player data and match one of p1 or p2 (henceforth referred to as clientPlayer) to playerId.
+         * 2. Update clientPlayer's score in the table.
+         * 3. Get the tile rack.
+         * 4. Add tiles to clientPlayer's hand.
+         * 5. Update the tile rack and clientPlayer's hand in the db.
+         * 6. Update oldBoard and board in the db.
+         * 7. Invert the value of p1turn in the db.
+         */
+
+        try {
+            Statement statement = connection.createStatement();
+            /* Get all details about games in which they're either the first or second player */
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM games where game_id = " + gameId);
+            /* If the game doesn't exist, or if the user isn't certified to view the game, terminate the request */
+            if (!resultSet.next() ||
+                    (resultSet.getInt("p1id") != playerId && resultSet.getInt("p2id") != playerId)
+                    )
+                return Optional.empty();
+
+            int clientPlayer = resultSet.getInt("p1id") == playerId ? 1 : 2;
+
+            int clientPlayerScore = resultSet.getInt("p" + clientPlayer + "score");
+            clientPlayerScore += scoreMove(boardBeforeMove, boardAfterMove);
+
+            String clientPlayerHand = resultSet.getString("p" + clientPlayer + "hand");
+            String tilebag = resultSet.getString("tilebag");
+
+            int usedTiles = forEachBoardSquareAsList((i, j) ->
+                    boardBeforeMove.get(i).get(j) == boardAfterMove.get(i).get(j) ? 0 : 1).stream()
+                    .reduce((a, b) -> a + b).get();
+
+            for (int i = 0; i < Math.min(usedTiles, tilebag.length()); i++)
+            {
+                clientPlayerHand += tilebag.charAt(0);
+                tilebag = tilebag.substring(1);
+            }
+
+            boolean p1turn = resultSet.getBoolean("p1turn");
+            p1turn = !p1turn;
+
+            StringBuilder oldBoardString = new StringBuilder();
+            StringBuilder boardString = new StringBuilder();
+
+            for (int i = 0; i < 15; i++)
+            {
+                for (int j = 0; j < 15; j++)
+                {
+                    oldBoardString.append(boardBeforeMove.get(i).get(j));
+                    boardString.append(boardAfterMove.get(i).get(j));
+                }
+            }
+
+
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE games " +
+                    "SET p" + clientPlayer + "score = ?, p" + clientPlayer + "hand = ?, tilebag = ?, p1turn = ?, oldBoard = ?, board = ? " +
+                    "WHERE game_id = " + gameId);
+            preparedStatement.setInt(1, clientPlayerScore);
+            preparedStatement.setString(2, clientPlayerHand);
+            preparedStatement.setString(3, tilebag);
+            preparedStatement.setBoolean(4, p1turn);
+            preparedStatement.setString(5, oldBoardString.toString());
+            preparedStatement.setString(6, boardString.toString());
+
+            preparedStatement.executeUpdate();
+
+            int other_player_id = resultSet.getInt("p" + ((clientPlayer) % 2 + 1) + "id");
+            GameStateItem clientGameStateItem, oppGameStateItem;
+            // Get opponent name from opponent id.
+            Statement s2 = connection.createStatement();
+            ResultSet rs2 = s2.executeQuery("SELECT username FROM users WHERE user_id = " + other_player_id);
+            if (!rs2.next())
+                return Optional.empty();
+            String opponentName = rs2.getString("username");
+
+            rs2 = s2.executeQuery("SELECT username FROM users WHERE user_id = " + playerId);
+            if (!rs2.next())
+                return Optional.empty();
+            String clientName = rs2.getString("username");
+
+            String opponentPlayerHand = resultSet.getString("p" + ((clientPlayer) % 2 + 1) + "hand");
+            int opponentScore = resultSet.getInt("p" + ((clientPlayer) % 2 + 1) + "score");
+
+
+            char[][] oldBoard = new char[15][15];
+            char[][] board = new char[15][15];
+            forEachBoardSquareAsList((i, j) -> {
+                oldBoard[i][j] = boardBeforeMove.get(i).get(j);
+                board[i][j] = boardAfterMove.get(i).get(j);
+                return null;
+            });
+
+            clientGameStateItem = new GameStateItem(opponentName, gameId, clientPlayerScore, opponentScore, board, oldBoard, clientPlayerHand, false);
+            oppGameStateItem = new GameStateItem(clientName, gameId, opponentScore, clientPlayerScore, board, oldBoard, opponentPlayerHand, true);
+
+            Map<Integer, GameStateItem> toSendMap = new HashMap<>();
+            toSendMap.put(playerId, clientGameStateItem);
+            toSendMap.put(other_player_id, oppGameStateItem);
+            return Optional.of(toSendMap);
+        }
+        catch (SQLException e)
+        {
             e.printStackTrace();
         }
         return Optional.empty();

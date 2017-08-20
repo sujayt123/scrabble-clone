@@ -1,4 +1,0 @@
-dbUrl
-dbname
-username
-password

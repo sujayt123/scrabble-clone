@@ -24,6 +24,22 @@ public class GameListItem {
                 opponentName, game_id, clientScore, opponentScore);
     }
 
+    @Override
+    public boolean equals(Object other)
+    {
+        if (!(other instanceof GameListItem))
+        {
+            return false;
+        }
+
+        GameListItem otherItem = (GameListItem) other;
+        return this.game_id == otherItem.getGame_id()
+                && this.opponentName.equals(otherItem.getOpponentName())
+                && this.clientScore == otherItem.getClientScore()
+                && this.opponentScore == otherItem.getOpponentScore();
+
+    }
+
     public String getOpponentName() {
         return opponentName;
     }

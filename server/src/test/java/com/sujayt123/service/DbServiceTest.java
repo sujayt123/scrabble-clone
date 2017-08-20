@@ -1,9 +1,10 @@
 package com.sujayt123.service;
 
+import com.sujayt123.communication.msg.server.GameListItem;
+import com.sujayt123.communication.msg.server.GameStateItem;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -19,39 +20,115 @@ public class DbServiceTest {
         db.deleteExistingAccount("hello2");
 
         /* Set up dummy accounts */
-        assertTrue(db.createNewAccount("hello", "world"));
-        assertTrue(db.createNewAccount("hello2", "world2"));
-        assertFalse(db.createNewAccount("CPU", "password"));
-        assertFalse(db.createNewAccount("hello", "password"));
-        assertFalse(db.createNewAccount("hello2", "password"));
+        Optional<Integer> helloCreationSuccess, hello2CreationSuccess, helloLoginSuccess, hello2LoginSuccess;
+
+        assertTrue((helloCreationSuccess = db.createNewAccount("hello", "world")).isPresent());
+        assertTrue((hello2CreationSuccess = db.createNewAccount("hello2", "world2")).isPresent());
+        assertFalse(db.createNewAccount("CPU", "password").isPresent());
+        assertFalse(db.createNewAccount("hello", "password").isPresent());
+        assertFalse(db.createNewAccount("hello2", "password").isPresent());
 
 
         /* Log in to dummy accounts */
-        Optional<Integer> hello_id_opt_fail = db.login("hello", "world2");
-        assertFalse(hello_id_opt_fail.isPresent());
+        assertTrue((helloLoginSuccess = db.login("hello", "world")).isPresent());
+        assertTrue((hello2LoginSuccess = db.login("hello2", "world2")).isPresent());
+        assertFalse(db.login("hello", "world2").isPresent());
+        assertFalse(db.login("hello2", "world").isPresent());
 
-        Optional<Integer> hello_id_opt_works = db.login("hello", "world");
-        assertTrue(hello_id_opt_works.isPresent());
-
-        Optional<Integer> hello2_id_opt_fail = db.login("hello2", "world");
-        assertFalse(hello2_id_opt_fail.isPresent());
-
-        Optional<Integer> hello2_id_opt_works = db.login("hello2", "world2");
-        assertTrue(hello2_id_opt_works.isPresent());
+        /* Logging in should return the same user ids */
+        assertEquals(helloCreationSuccess.get(), helloLoginSuccess.get());
+        assertEquals(hello2CreationSuccess.get(), hello2LoginSuccess.get());
 
         /* Create games involving dummy players */
-        assertFalse(db.createNewGame(hello_id_opt_works.get(), "notaRealPlayer"));
-        assertTrue(db.createNewGame(hello_id_opt_works.get(), "CPU"));
-        assertTrue(db.createNewGame(hello2_id_opt_works.get(), "CPU"));
-        assertTrue(db.createNewGame(hello2_id_opt_works.get(), "hello"));
+        assertFalse(db.createNewGame(helloLoginSuccess.get(), "notaRealPlayer"));
+        assertTrue(db.createNewGame(helloLoginSuccess.get(), "CPU"));
+        assertTrue(db.createNewGame(hello2LoginSuccess.get(), "CPU"));
+        assertTrue(db.createNewGame(hello2LoginSuccess.get(), "hello"));
 
-        System.out.println(Arrays.toString(db.getGamesForPlayer(hello_id_opt_works.get()).get()));
-        System.out.println(Arrays.toString(db.getGamesForPlayer(hello2_id_opt_works.get()).get()));
-        System.out.println(Arrays.toString(db.getGamesForPlayer(1).get()));
+        Optional<GameListItem[]> gamesForHello = db.getGamesForPlayer(helloLoginSuccess.get());
+        Optional<GameListItem[]> gamesForHello2 = db.getGamesForPlayer(hello2LoginSuccess.get());
+        assertTrue(gamesForHello.isPresent());
+        assertTrue(gamesForHello2.isPresent());
+
+        /* Assert that every game for the player "Hello" is against one of hello2 and cpu */
+        Arrays.asList(gamesForHello.get()).forEach(x -> assertTrue(Arrays.asList("hello2", "CPU").contains(x.getOpponentName())));
+        assertEquals(gamesForHello.get().length, 2);
+
+        /* Assert that every game for the player "Hello2" is against one of hello and cpu */
+        Arrays.asList(gamesForHello2.get()).forEach(x -> assertTrue(Arrays.asList("hello", "CPU").contains(x.getOpponentName())));
+        assertEquals(gamesForHello2.get().length, 2);
+
+        /* Test that hello's games were created and retrieved correctly */
+        for (int k = 0; k < 2; k++)
+        {
+            Optional<GameStateItem> gameStateItemHello = db.getGameById(helloLoginSuccess.get(), gamesForHello.get()[k].getGame_id());
+            assertTrue(gameStateItemHello.isPresent());
+            for (int i = 0; i < 15; i++)
+            {
+                for (int j = 0; j < 15; j++)
+                {
+                    assertEquals(gameStateItemHello.get().getOldBoard()[i][j], ' ');
+                    assertEquals(gameStateItemHello.get().getBoard()[i][j], ' ');
+                }
+            }
+
+        /* The logic of the createGame function ensures that the creating player goes first. So
+         * if we're checking the game against the CPU, we go first. If we're checking the game against
+          * hello2, hello2 goes first because he created the game. */
+
+            if (gameStateItemHello.get().getOpponentName().equals("CPU"))
+            {
+                assertTrue(gameStateItemHello.get().isClientTurn());
+            }
+            else
+            {
+                assertFalse(gameStateItemHello.get().isClientTurn());
+            }
+        }
+
+        /* Now attempt making an update to one of the game's state */
+
+        // No change in the board state should result in an "invalid" update
+        List<List<Character>> board1, board2;
+        board1 = Arrays.asList(Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '));
+
+        // Updating with a valid word should be accepted.
+        board2 = Arrays.asList(Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', 'B', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
+                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '));
+
+        Optional<Map<Integer, GameStateItem>> updateGameRetVal = db.updateGameState(helloLoginSuccess.get(), gamesForHello.get()[0].getGame_id(), board1, board2);
+        assertTrue(updateGameRetVal.isPresent());
 
         /* Remove dummy accounts */
-        assertTrue(db.deleteExistingAccount(hello_id_opt_works.get()));
-        assertTrue(db.deleteExistingAccount(hello2_id_opt_works.get()));
+        db.deleteExistingAccount(helloLoginSuccess.get());
+        db.deleteExistingAccount(hello2LoginSuccess.get());
 
     }
 
