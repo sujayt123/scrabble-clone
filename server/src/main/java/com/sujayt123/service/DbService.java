@@ -1,9 +1,11 @@
 package com.sujayt123.service;
 
+import javafx.util.Pair;
 import scrabble.Tile;
 
 import com.sujayt123.communication.msg.server.GameStateItem;
 import com.sujayt123.communication.msg.server.GameListItem;
+import util.FunctionHelper;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -13,6 +15,7 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import static util.FunctionHelper.*;
 import static scrabble.Board.*;
@@ -392,13 +395,37 @@ public class DbService {
             String clientPlayerHand = resultSet.getString("p" + clientPlayer + "hand");
             String tilebag = resultSet.getString("tilebag");
 
-            int usedTiles = forEachBoardSquareAsList((i, j) ->
-                    boardBeforeMove.get(i).get(j) == boardAfterMove.get(i).get(j) ? 0 : 1).stream()
-                    .reduce((a, b) -> a + b).get();
+            // Get all pairs in which board differs from mainModel.
+            List<Pair<Integer, Integer>> changed_coords = FunctionHelper.getCoordinatesListForBoard().stream().filter(x -> {
+                int r = x.getKey();
+                int c = x.getValue();
+                return boardBeforeMove.get(r).get(c) != boardAfterMove.get(r).get(c);
+            }).collect(Collectors.toList());
 
-            for (int i = 0; i < Math.min(usedTiles, tilebag.length()); i++)
+            StringBuilder sb = new StringBuilder(clientPlayerHand);
+            for (int i = 0; i < changed_coords.size(); i++)
             {
-                clientPlayerHand += tilebag.charAt(0);
+                char toRemove = boardAfterMove.get(changed_coords.get(i).getKey()).get(changed_coords.get(i).getValue());
+                int flag = -1;
+                for (int j = 0; j < sb.length(); j++)
+                {
+                    System.out.println( j + " : " + sb.charAt(j));
+                    if (sb.charAt(j) == toRemove)
+                    {
+                        flag = j;
+                        break;
+                    }
+                }
+                if (flag == - 1)
+                {
+                    return Optional.empty();
+                }
+                sb.deleteCharAt(flag);
+            }
+
+            for (int i = 0; i < Math.min(changed_coords.size(), tilebag.length()); i++)
+            {
+                sb.append(tilebag.charAt(0));
                 tilebag = tilebag.substring(1);
             }
 
@@ -422,7 +449,7 @@ public class DbService {
                     "SET p" + clientPlayer + "score = ?, p" + clientPlayer + "hand = ?, tilebag = ?, p1turn = ?, oldBoard = ?, board = ? " +
                     "WHERE game_id = " + gameId);
             preparedStatement.setInt(1, clientPlayerScore);
-            preparedStatement.setString(2, clientPlayerHand);
+            preparedStatement.setString(2, sb.toString());
             preparedStatement.setString(3, tilebag);
             preparedStatement.setBoolean(4, p1turn);
             preparedStatement.setString(5, oldBoardString.toString());
@@ -447,7 +474,6 @@ public class DbService {
             String opponentPlayerHand = resultSet.getString("p" + ((clientPlayer) % 2 + 1) + "hand");
             int opponentScore = resultSet.getInt("p" + ((clientPlayer) % 2 + 1) + "score");
 
-
             char[][] oldBoard = new char[15][15];
             char[][] board = new char[15][15];
             forEachBoardSquareAsList((i, j) -> {
@@ -456,7 +482,7 @@ public class DbService {
                 return null;
             });
 
-            clientGameStateItem = new GameStateItem(opponentName, gameId, clientPlayerScore, opponentScore, board, oldBoard, clientPlayerHand, false);
+            clientGameStateItem = new GameStateItem(opponentName, gameId, clientPlayerScore, opponentScore, board, oldBoard, sb.toString(), false);
             oppGameStateItem = new GameStateItem(clientName, gameId, opponentScore, clientPlayerScore, board, oldBoard, opponentPlayerHand, true);
 
             Map<Integer, GameStateItem> toSendMap = new HashMap<>();

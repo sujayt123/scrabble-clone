@@ -2,9 +2,15 @@ package com.sujayt123.service;
 
 import com.sujayt123.communication.msg.server.GameListItem;
 import com.sujayt123.communication.msg.server.GameStateItem;
+import javafx.util.Pair;
 import org.junit.Test;
+import scrabble.AI;
+import scrabble.Trie;
+import util.Quadruple;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -106,25 +112,34 @@ public class DbServiceTest {
                 Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
                 Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '));
 
-        // Updating with a valid word should be accepted.
-        board2 = Arrays.asList(Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', 'A', 'B', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '));
+        /* Fake (irrelevant) queue generated for the sake of running AI.CPUMove procedure. */
+
+        String playerHand = db.getGameById(helloLoginSuccess.get(), gamesForHello.get()[0].getGame_id()).get().getClientHand();
+        List<Character> playerHandAsList = playerHand.chars().mapToObj(x -> (char)x).collect(Collectors.toList());
+        Queue<Character> irrelevantQueue = new ConcurrentLinkedDeque<>(Arrays.asList('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'));
+        // Updating with a valid word should be accepted. The AI will choose a valid word for this test.
+        Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Pair<String, Integer>> move =
+            AI.CPUMove(new Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Trie>
+                    (board1,
+                    playerHandAsList,
+                    irrelevantQueue,
+                    new Trie()));
+
+        board2 = move.getA();
 
         Optional<Map<Integer, GameStateItem>> updateGameRetVal = db.updateGameState(helloLoginSuccess.get(), gamesForHello.get()[0].getGame_id(), board1, board2);
         assertTrue(updateGameRetVal.isPresent());
+
+        /* Check whether the game was updated in the database and whether the result of db.updateGameState is consistent with the db */
+        Optional<GameStateItem> updatedGame = db.getGameById(helloLoginSuccess.get(), gamesForHello.get()[0].getGame_id());
+
+        assertTrue(updatedGame.isPresent());
+        assertEquals(updateGameRetVal.get().get(helloLoginSuccess.get()), updatedGame.get());
+
+        assertFalse(updatedGame.get().isClientTurn());
+        assertNotEquals(gamesForHello.get()[0].getClientScore(), updatedGame.get().getClientScore());
+        /* The value of the old board should be ' ', the value of the new board should be 'A' */
+        assertNotEquals(updatedGame.get().getOldBoard()[7][7], updatedGame.get().getBoard()[7][7]);
 
         /* Remove dummy accounts */
         db.deleteExistingAccount(helloLoginSuccess.get());
