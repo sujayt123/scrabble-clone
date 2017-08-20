@@ -146,5 +146,4 @@ public class DbServiceTest {
         db.deleteExistingAccount(hello2LoginSuccess.get());
 
     }
-
 }

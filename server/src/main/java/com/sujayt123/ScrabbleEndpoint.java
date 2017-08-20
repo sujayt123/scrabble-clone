@@ -150,15 +150,29 @@ public class ScrabbleEndpoint {
                     return;
                 }
 
-                // Score the move.
-                int moveScore = scoreMove(boardBeforeAttemptedMove, boardAfterAttemptedMove);
+                // Score the move and update the database.
+                Optional<Map<Integer, GameStateItem>> retVal = dbService
+                        .updateGameState(sessionToUserIdMap.get(session), moveMessage.getGame_id(),
+                                boardBeforeAttemptedMove, boardAfterAttemptedMove);
 
-                // Update the database.
+                if (!retVal.isPresent())
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                    return;
+                }
 
                 // Notify all active clients who are participating in the game of the update.
+                Set<Map.Entry<Session, Integer>> sessionToUserEntrySet = sessionToUserIdMap.entrySet();
+                for (Map.Entry<Session, Integer> e: sessionToUserEntrySet)
+                {
+                    if (retVal.get().containsKey(e.getValue()))
+                    {
+                        GameStateItem toSend = retVal.get().remove(e.getValue());
+                        e.getKey().getBasicRemote().sendObject(new GameStateMessage(toSend));
+                    }
+                }
 
-
-                //TODO
+                // TODO TEST
                 break;
 
             default:
