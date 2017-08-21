@@ -5,6 +5,8 @@ import com.sujayt123.communication.msg.server.GameListItem;
 import com.sujayt123.communication.msg.server.GameStateItem;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import scrabble.Tile;
 
@@ -13,18 +15,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-import static org.mockito.Matchers.anyChar;
-import static util.FunctionHelper.*;
 import static org.junit.Assert.*;
-
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyChar;
 import static org.mockito.Mockito.times;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.powermock.api.mockito.PowerMockito.*;
+import static util.FunctionHelper.forEachBoardSquareAsNestedList;
 
 /* Use the powermock library to mock the results of static function calls within implementation classes */
 @RunWith( PowerMockRunner.class )
@@ -51,7 +46,6 @@ public class DbServiceTest {
     @Before
     public void setup()
     {
-        Gson gson = new Gson();
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader("src/test/java/com/sujayt123/service/testData.json"));
             String readValue = bufferedReader.readLine();
@@ -59,9 +53,9 @@ public class DbServiceTest {
             invalidBoard = forEachBoardSquareAsNestedList((i, j) -> testData.getInvalidBoard()[i][j]);
             invalidBoard2 = forEachBoardSquareAsNestedList((i, j) -> testData.getInvalidBoard2()[i][j]);
             validBoard = forEachBoardSquareAsNestedList((i, j) -> testData.getValidBoard()[i][j]);
-            gameQueue1 = new ArrayDeque<Character>();
-            gameQueue2 = new ArrayDeque<Character>();
-            gameQueue3 = new ArrayDeque<Character>();
+            gameQueue1 = new ArrayDeque<>();
+            gameQueue2 = new ArrayDeque<>();
+            gameQueue3 = new ArrayDeque<>();
             for (char c : testData.getGameQueue1().toCharArray())
             {
                 gameQueue1.add(c);
@@ -210,10 +204,6 @@ public class DbServiceTest {
                 Optional<Map<Integer, GameStateItem>> updateRetVal;
                 assertTrue((updateRetVal = db.updateGameState(helloLoginSuccess.get(), gameId, validBoard)).isPresent());
 
-//                System.out.println(updateRetVal.get().get(helloLoginSuccess.get()));
-//                System.out.println();
-//                System.out.println();
-//                System.out.println(updateRetVal.get().get(1));
                 /* Assert some things about the game vs the CPU now that the move has been made */
                 updateRetVal.get().forEach((key, value) -> {
                     // Certain things must be true about "hello's" view of the game.
