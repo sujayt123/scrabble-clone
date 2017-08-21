@@ -5,21 +5,15 @@ import scrabble.Tile;
 
 import com.sujayt123.communication.msg.server.GameStateItem;
 import com.sujayt123.communication.msg.server.GameListItem;
+import scrabble.Trie;
 import util.FunctionHelper;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import static util.FunctionHelper.*;
 import static scrabble.Board.*;
-import static com.sujayt123.ScrabbleEndpoint.logr;
 import static org.mindrot.jbcrypt.BCrypt.*;
 
 /**
@@ -31,6 +25,8 @@ public class DbService {
      * A connection to a MySql database.
      */
     private Connection connection;
+
+    private static final Trie trie = new Trie();
 
     /**
      * Constructor. Establishes a connection to the database.
@@ -182,9 +178,9 @@ public class DbService {
      *
      * @param p1id the creating player's user_id
      * @param otherPlayerUsername the username of his/her opponent ("CPU" for cpu player)
-     * @return true if the game was successfully made, false otherwise
+     * @return an optional of the game id if the game was successfully made, optional.empty otherwise
      */
-    public boolean createNewGame(int p1id, String otherPlayerUsername)
+    public Optional<Integer> createNewGame(int p1id, String otherPlayerUsername)
     {
         try {
 
@@ -194,7 +190,7 @@ public class DbService {
             /* Find the player id for the opponent username */
             resultSet = statement.executeQuery("SELECT user_id FROM users where username = \"" + otherPlayerUsername + "\"");
             if (!resultSet.next())
-                return false;
+                return Optional.empty();
             int p2id = resultSet.getInt("user_id");
 
             StringBuilder board = new StringBuilder();
@@ -233,13 +229,19 @@ public class DbService {
 
             statement.execute("SET sql_mode='PAD_CHAR_TO_FULL_LENGTH'");
 
+            resultSet = statement.executeQuery("SELECT LAST_INSERT_ID()");
+            if (!resultSet.next())
+                return Optional.empty();
+
+            int gameId = resultSet.getInt(1);
+
             resultSet.close();
             statement.close();
             preparedStatement.close();
-            return true;
+            return Optional.of(gameId);
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return Optional.empty();
         }
     }
 
@@ -353,16 +355,12 @@ public class DbService {
     /**
      * Updates a game state in the system with the latest move.
      *
-     * Requires:
-     * the game state to be validated prior to execution of this function
-     *
      * @param playerId the id of the player who made the move
      * @param gameId the id of the game to update
-     * @param boardBeforeMove the board before the player made a move
      * @param boardAfterMove the board after the player made a move
      * @return an optional of a map from playerId to the GameStateItems we should send following the update
      */
-    public Optional<Map<Integer, GameStateItem>> updateGameState(int playerId, int gameId, List<List<Character>> boardBeforeMove, List<List<Character>> boardAfterMove)
+    public Optional<Map<Integer, GameStateItem>> updateGameState(int playerId, int gameId, List<List<Character>> boardAfterMove)
     {
 
         /*
@@ -387,6 +385,20 @@ public class DbService {
                     )
                 return Optional.empty();
 
+            List<List<Character>> boardBeforeMove = forEachBoardSquareAsNestedList((i, j) -> {
+                try {
+                    return resultSet.getString("board").charAt(i * 15 + j);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            });
+
+            if (!validMove(boardBeforeMove, boardAfterMove, trie))
+            {
+                return Optional.empty();
+            }
+
             int clientPlayer = resultSet.getInt("p1id") == playerId ? 1 : 2;
 
             int clientPlayerScore = resultSet.getInt("p" + clientPlayer + "score");
@@ -409,7 +421,6 @@ public class DbService {
                 int flag = -1;
                 for (int j = 0; j < sb.length(); j++)
                 {
-                    System.out.println( j + " : " + sb.charAt(j));
                     if (sb.charAt(j) == toRemove)
                     {
                         flag = j;

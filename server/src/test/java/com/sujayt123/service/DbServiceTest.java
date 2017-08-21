@@ -1,29 +1,94 @@
 package com.sujayt123.service;
 
+import com.google.gson.Gson;
 import com.sujayt123.communication.msg.server.GameListItem;
 import com.sujayt123.communication.msg.server.GameStateItem;
-import javafx.util.Pair;
+import org.junit.Before;
 import org.junit.Test;
-import scrabble.AI;
-import scrabble.Trie;
-import util.Quadruple;
+import org.powermock.modules.junit4.PowerMockRunner;
+import scrabble.Tile;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.stream.Collectors;
 
+import static org.mockito.Matchers.anyChar;
+import static util.FunctionHelper.*;
 import static org.junit.Assert.*;
 
+import org.junit.runner.RunWith;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
+
+/* Use the powermock library to mock the results of static function calls within implementation classes */
+@RunWith( PowerMockRunner.class )
+@PrepareForTest({Tile.class})
 /**
  * Created by sujay on 8/15/17.
  */
 public class DbServiceTest {
+
+    private List<List<Character>> invalidBoard;
+    private List<List<Character>> invalidBoard2;
+    private List<List<Character>> validBoard;
+
+    /* Each game is precisely specified in the testing data file. Player 1 in the following examples refers to the player who creates the game */
+    /* ... In the first created game, every player's starting hand is the rack 'ABCDEFG' ... */
+    private Queue<Character> gameQueue1;
+    /* ... In the second created game, every player's starting hand is the rack 'EBCDEFG' ... */
+    private Queue<Character> gameQueue2;
+    /* ... In the third created game, player 1's starting hand is the rack 'IBCDEFH' and player 2's starting hand is the rack 'IBCDEFG' ... */
+    private Queue<Character> gameQueue3;
+
+
+
+    @Before
+    public void setup()
+    {
+        Gson gson = new Gson();
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader("src/test/java/com/sujayt123/service/testData.json"));
+            String readValue = bufferedReader.readLine();
+            TestData testData = new Gson().fromJson(readValue, TestData.class);
+            invalidBoard = forEachBoardSquareAsNestedList((i, j) -> testData.getInvalidBoard()[i][j]);
+            invalidBoard2 = forEachBoardSquareAsNestedList((i, j) -> testData.getInvalidBoard2()[i][j]);
+            validBoard = forEachBoardSquareAsNestedList((i, j) -> testData.getValidBoard()[i][j]);
+            gameQueue1 = new ArrayDeque<Character>();
+            gameQueue2 = new ArrayDeque<Character>();
+            gameQueue3 = new ArrayDeque<Character>();
+            for (char c : testData.getGameQueue1().toCharArray())
+            {
+                gameQueue1.add(c);
+            }
+            for (char c : testData.getGameQueue2().toCharArray())
+            {
+                gameQueue2.add(c);
+            }
+            for (char c : testData.getGameQueue3().toCharArray())
+            {
+                gameQueue3.add(c);
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            assertTrue(false); // Force the test to fail if file not found
+        }
+    }
+
     @Test
     public void tests() throws Exception {
         DbService db = new DbService();
 
         db.deleteExistingAccount("hello");
         db.deleteExistingAccount("hello2");
+
 
         /* Set up dummy accounts */
         Optional<Integer> helloCreationSuccess, hello2CreationSuccess, helloLoginSuccess, hello2LoginSuccess;
@@ -33,7 +98,6 @@ public class DbServiceTest {
         assertFalse(db.createNewAccount("CPU", "password").isPresent());
         assertFalse(db.createNewAccount("hello", "password").isPresent());
         assertFalse(db.createNewAccount("hello2", "password").isPresent());
-
 
         /* Log in to dummy accounts */
         assertTrue((helloLoginSuccess = db.login("hello", "world")).isPresent());
@@ -45,11 +109,19 @@ public class DbServiceTest {
         assertEquals(helloCreationSuccess.get(), helloLoginSuccess.get());
         assertEquals(hello2CreationSuccess.get(), hello2LoginSuccess.get());
 
+        mockStatic(Tile.class);
+
+        when(Tile.getTileBagForGame()).thenReturn(gameQueue1, gameQueue2, gameQueue3);
+        when(Tile.scoreCharacter(anyChar())).thenCallRealMethod();
+
         /* Create games involving dummy players */
-        assertFalse(db.createNewGame(helloLoginSuccess.get(), "notaRealPlayer"));
-        assertTrue(db.createNewGame(helloLoginSuccess.get(), "CPU"));
-        assertTrue(db.createNewGame(hello2LoginSuccess.get(), "CPU"));
-        assertTrue(db.createNewGame(hello2LoginSuccess.get(), "hello"));
+        Optional<Integer> game1, game2, game3;
+        assertFalse(db.createNewGame(helloLoginSuccess.get(), "notaRealPlayer").isPresent());
+        assertTrue((game1 = db.createNewGame(helloLoginSuccess.get(), "CPU")).isPresent());
+        assertTrue((game2 = db.createNewGame(hello2LoginSuccess.get(), "CPU")).isPresent());
+        assertTrue((game3 = db.createNewGame(hello2LoginSuccess.get(), "hello")).isPresent());
+        verifyStatic(times(3));
+        Tile.getTileBagForGame();
 
         Optional<GameListItem[]> gamesForHello = db.getGamesForPlayer(helloLoginSuccess.get());
         Optional<GameListItem[]> gamesForHello2 = db.getGamesForPlayer(hello2LoginSuccess.get());
@@ -85,61 +157,95 @@ public class DbServiceTest {
             if (gameStateItemHello.get().getOpponentName().equals("CPU"))
             {
                 assertTrue(gameStateItemHello.get().isClientTurn());
+                assertEquals(gameStateItemHello.get().getClientHand(), "ABCDEFG");
             }
             else
             {
                 assertFalse(gameStateItemHello.get().isClientTurn());
+                assertEquals(gameStateItemHello.get().getClientHand(), "IBCDEFG");
             }
         }
 
-        /* Now attempt making an update to one of the game's state */
+        /* Test that hello2's games were created and retrieved correctly */
+        for (int k = 0; k < 2; k++)
+        {
+            Optional<GameStateItem> gameStateItemHello2 = db.getGameById(hello2LoginSuccess.get(), gamesForHello2.get()[k].getGame_id());
+            assertTrue(gameStateItemHello2.isPresent());
+            for (int i = 0; i < 15; i++)
+            {
+                for (int j = 0; j < 15; j++)
+                {
+                    assertEquals(gameStateItemHello2.get().getOldBoard()[i][j], ' ');
+                    assertEquals(gameStateItemHello2.get().getBoard()[i][j], ' ');
+                }
+            }
 
-        // No change in the board state should result in an "invalid" update
-        List<List<Character>> board1, board2;
-        board1 = Arrays.asList(Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '),
-                Arrays.asList(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '));
+        /* The logic of the createGame function ensures that the creating player goes first. So
+         * if we're checking the game against the CPU, we go first. If we're checking the game against
+          * hello, we go first because he created the game. */
 
-        /* Fake (irrelevant) queue generated for the sake of running AI.CPUMove procedure. */
+            if (gameStateItemHello2.get().getOpponentName().equals("CPU"))
+            {
+                assertTrue(gameStateItemHello2.get().isClientTurn());
+                assertEquals(gameStateItemHello2.get().getClientHand(), "EBCDEFG");
+            }
+            else
+            {
+                assertTrue(gameStateItemHello2.get().isClientTurn());
+                assertEquals(gameStateItemHello2.get().getClientHand(), "IBCDEFH");
+            }
+        }
 
-        String playerHand = db.getGameById(helloLoginSuccess.get(), gamesForHello.get()[0].getGame_id()).get().getClientHand();
-        List<Character> playerHandAsList = playerHand.chars().mapToObj(x -> (char)x).collect(Collectors.toList());
-        Queue<Character> irrelevantQueue = new ConcurrentLinkedDeque<>(Arrays.asList('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'));
-        // Updating with a valid word should be accepted. The AI will choose a valid word for this test.
-        Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Pair<String, Integer>> move =
-            AI.CPUMove(new Quadruple<List<List<Character>>, List<Character>, Queue<Character>, Trie>
-                    (board1,
-                    playerHandAsList,
-                    irrelevantQueue,
-                    new Trie()));
+        /* Now attempt making an update to hello's game against the CPU */
+        for (int k = 0; k < 2; k++)
+        {
+            final int gameId = gamesForHello.get()[k].getGame_id();
+            GameStateItem gameStateItemHello = db.getGameById(helloLoginSuccess.get(), gameId).get();
+            if (gameStateItemHello.getOpponentName().equals("CPU"))
+            {
+                // It's "hello"'s turn against CPU.
+                assertFalse(db.updateGameState(helloLoginSuccess.get(), gameId, invalidBoard).isPresent());
+                assertFalse(db.updateGameState(helloLoginSuccess.get(), gameId, invalidBoard2).isPresent());
 
-        board2 = move.getA();
+                Optional<Map<Integer, GameStateItem>> updateRetVal;
+                assertTrue((updateRetVal = db.updateGameState(helloLoginSuccess.get(), gameId, validBoard)).isPresent());
 
-        Optional<Map<Integer, GameStateItem>> updateGameRetVal = db.updateGameState(helloLoginSuccess.get(), gamesForHello.get()[0].getGame_id(), board1, board2);
-        assertTrue(updateGameRetVal.isPresent());
+//                System.out.println(updateRetVal.get().get(helloLoginSuccess.get()));
+//                System.out.println();
+//                System.out.println();
+//                System.out.println(updateRetVal.get().get(1));
+                /* Assert some things about the game vs the CPU now that the move has been made */
+                updateRetVal.get().forEach((key, value) -> {
+                    // Certain things must be true about "hello's" view of the game.
+                    if (key.equals(helloLoginSuccess.get()))
+                    {
+                        assertEquals(value.getOpponentName(), "CPU");
+                        assertTrue(value.getClientHand().equals("CDEFGHH"));
+                        assertEquals(value.getClientScore(), 8);
+                        assertEquals(value.getOpponentScore(), 0);
+                        assertEquals(value.getOldBoard()[7][6], ' ');
+                        assertEquals(value.getOldBoard()[7][7], ' ');
+                        assertEquals(value.getBoard()[7][6], 'A');
+                        assertEquals(value.getBoard()[7][7], 'B');
+                        assertFalse(value.isClientTurn());
+                    }
+                    // Certain things must be true about "cpu's" view of the game.
+                    else
+                    {
+                        assertEquals(value.getOpponentName(), "hello");
+                        assertTrue(value.getClientHand().equals("ABCDEFG"));
+                        assertEquals(value.getOpponentScore(), 8);
+                        assertEquals(value.getClientScore(), 0);
+                        assertEquals(value.getOldBoard()[7][6], ' ');
+                        assertEquals(value.getOldBoard()[7][7], ' ');
+                        assertEquals(value.getBoard()[7][6], 'A');
+                        assertEquals(value.getBoard()[7][7], 'B');
+                        assertTrue(value.isClientTurn());
+                    }
+                });
+            }
+        }
 
-        /* Check whether the game was updated in the database and whether the result of db.updateGameState is consistent with the db */
-        Optional<GameStateItem> updatedGame = db.getGameById(helloLoginSuccess.get(), gamesForHello.get()[0].getGame_id());
-
-        assertTrue(updatedGame.isPresent());
-        assertEquals(updateGameRetVal.get().get(helloLoginSuccess.get()), updatedGame.get());
-
-        assertFalse(updatedGame.get().isClientTurn());
-        assertNotEquals(gamesForHello.get()[0].getClientScore(), updatedGame.get().getClientScore());
-        /* The value of the old board should be ' ', the value of the new board should be 'A' */
-        assertNotEquals(updatedGame.get().getOldBoard()[7][7], updatedGame.get().getBoard()[7][7]);
 
         /* Remove dummy accounts */
         db.deleteExistingAccount(helloLoginSuccess.get());

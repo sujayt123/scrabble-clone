@@ -135,25 +135,14 @@ public class ScrabbleEndpoint {
                     return;
                 }
 
-                List<List<Character>> boardBeforeAttemptedMove =
-                        forEachBoardSquareAsNestedList((i, j) ->
-                                gameVal.get().getBoard()[i][j]);
-
                 List<List<Character>> boardAfterAttemptedMove =
                         forEachBoardSquareAsNestedList((i, j) ->
                                 moveMessage.getBoardAfterAttemptedMove()[i][j]);
 
-                // Ensure the player's move was valid.
-                if (!validMove(boardBeforeAttemptedMove, boardAfterAttemptedMove, trie))
-                {
-                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
-                    return;
-                }
-
                 // Score the move and update the database.
                 Optional<Map<Integer, GameStateItem>> retVal = dbService
                         .updateGameState(sessionToUserIdMap.get(session), moveMessage.getGame_id(),
-                                boardBeforeAttemptedMove, boardAfterAttemptedMove);
+                                boardAfterAttemptedMove);
 
                 if (!retVal.isPresent())
                 {
@@ -175,6 +164,27 @@ public class ScrabbleEndpoint {
                 // TODO TEST
                 break;
 
+            case "class com.sujayt123.communication.msg.client.CreateGameMessage":
+                // Ensure current player is logged in.
+                if (!sessionToUserIdMap.containsKey(session))
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                    return;
+                }
+                CreateGameMessage createGameMessage = (CreateGameMessage) m;
+
+                Optional<Integer> createGameRetVal = dbService.createNewGame(sessionToUserIdMap.get(session), createGameMessage.getOpponentName());
+
+                if (createGameRetVal.isPresent())
+                {
+                    Optional<GameStateItem> game = dbService.getGameById(sessionToUserIdMap.get(session), createGameRetVal.get());
+                    session.getBasicRemote().sendObject(new GameStateMessage(game.get()));
+                }
+                else
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                }
+                break;
             default:
                 session.getBasicRemote().sendObject(new ConfusedMessage());
                 break;
