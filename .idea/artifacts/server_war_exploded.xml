@@ -22,7 +22,7 @@
             <element id="module-output" name="client" />
           </element>
           <element id="library" level="project" name="Maven: javax.websocket:javax.websocket-api:1.0" />
-          <element id="library" level="project" name="Maven: javax.json:javax.json-api:1.0" />
+          <element id="library" level="project" name="Maven: org.glassfish:javax.json:1.0.4" />
           <element id="library" level="project" name="Maven: org.mindrot:jbcrypt:0.4" />
           <element id="library" level="project" name="Maven: com.google.code.gson:gson:2.8.1" />
           <element id="library" level="project" name="Maven: mysql:mysql-connector-java:6.0.6" />

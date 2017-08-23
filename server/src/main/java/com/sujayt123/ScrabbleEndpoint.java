@@ -17,7 +17,6 @@ import com.sujayt123.service.DbService;
 import scrabble.Trie;
 
 import static util.FunctionHelper.*;
-import static scrabble.Board.*;
 
 /**
  * Created by sujay on 8/14/17.
@@ -197,6 +196,5 @@ public class ScrabbleEndpoint {
         logr.log(Level.INFO, "Closing session with websocket client.");
         // Remove the client's session from the active session map.
         sessionToUserIdMap.remove(session);
-
     }
 }
