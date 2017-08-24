@@ -22,4 +22,14 @@ public class StringMessage extends Message {
     public void setMessage(String message) {
         this.message = message;
     }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (other == null || !(other instanceof StringMessage))
+        {
+            return false;
+        }
+        return this.message.equals(((StringMessage) other).getMessage());
+    }
 }

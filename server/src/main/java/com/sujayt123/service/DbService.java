@@ -65,6 +65,7 @@ public class DbService {
             /* Check if the user with username ${username} already exists in the system */
             if (resultSet.next())
             {
+                System.out.println("UYAAAAAAAAAAA");
                 return Optional.empty();
             }
 

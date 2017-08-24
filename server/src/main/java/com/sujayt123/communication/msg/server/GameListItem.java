@@ -4,6 +4,7 @@ package com.sujayt123.communication.msg.server;
  * Created by sujay on 8/15/17.
  */
 public class GameListItem {
+
     private String opponentName;
     private int game_id;
 

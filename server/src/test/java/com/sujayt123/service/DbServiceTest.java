@@ -25,6 +25,12 @@ import static util.FunctionHelper.forEachBoardSquareAsNestedList;
 @RunWith( PowerMockRunner.class )
 @PrepareForTest({Tile.class})
 /**
+ * Since DbService itself is single-threaded, all requests received in serial order are guaranteed to be
+ * processed in that very order. And since all SQL actions are atomic, it is guaranteed that if one transaction
+ * starts before another, it also ends before that other one. So I presume concurrency is not an issue in this test.
+ *
+ * (The same isn't true when running tests of multiple clients making requests to a multithreaded server.)
+ *
  * Created by sujay on 8/15/17.
  */
 public class DbServiceTest {

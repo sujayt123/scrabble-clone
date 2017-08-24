@@ -60,7 +60,6 @@ public class GameStateItem extends GameListItem {
 
         return this.clientHand.equals(otherItem.getClientHand()) &&
                 this.clientTurn == otherItem.isClientTurn();
-
     }
 
     public char[][] getBoard() {

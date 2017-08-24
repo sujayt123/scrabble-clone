@@ -28,6 +28,8 @@ import static util.FunctionHelper.*;
  * other game's updated information. If the player is participating in the game for which
  * he gets a notification, the client should update the game view.
  *
+ * Designed such that each incoming request message has exactly one response message.
+ *
  */
 
 @ServerEndpoint(value = "/connect", encoders = {MessageEncoder.class}, decoders = {MessageDecoder.class})
@@ -36,14 +38,14 @@ public class ScrabbleEndpoint {
     public static Logger logr = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private static Trie trie = new Trie();
 
-    private static DbService dbService = new DbService();
+    static DbService dbService = new DbService();
 
     /**
      * A map from a username of a logged-in player to his/her session.
      * A session is only truly "important" once the player has logged in.
      */
 
-    public Map<Session, Integer> sessionToUserIdMap = Collections.synchronizedMap(new HashMap<>());
+    private Map<Session, Integer> sessionToUserIdMap = Collections.synchronizedMap(new HashMap<>());
 
 
     @OnOpen
@@ -63,7 +65,6 @@ public class ScrabbleEndpoint {
                 if (createRetVal.isPresent())
                 {
                     sessionToUserIdMap.put(session, createRetVal.get());
-                    session.getBasicRemote().sendObject(new AuthorizedMessage());
                     session.getBasicRemote().sendObject(new GameListMessage(new GameListItem[0]));
                 }
                 else
@@ -78,7 +79,6 @@ public class ScrabbleEndpoint {
                 {
                     /* Mark the user as authorized via the session to user map. */
                     sessionToUserIdMap.put(session, loginRetVal.get());
-                    session.getBasicRemote().sendObject(new AuthorizedMessage());
                     session.getBasicRemote().sendObject(new GameListMessage(dbService.getGamesForPlayer(loginRetVal.get()).orElse(new GameListItem[0])));
                 }
                 else

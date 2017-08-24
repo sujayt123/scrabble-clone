@@ -26,6 +26,8 @@
           <element id="library" level="project" name="Maven: org.mindrot:jbcrypt:0.4" />
           <element id="library" level="project" name="Maven: com.google.code.gson:gson:2.8.1" />
           <element id="library" level="project" name="Maven: mysql:mysql-connector-java:6.0.6" />
+          <element id="library" level="project" name="Maven: org.glassfish.tyrus:tyrus-core:1.13.1" />
+          <element id="library" level="project" name="Maven: org.glassfish.tyrus:tyrus-spi:1.13.1" />
           <element id="library" level="project" name="Maven: junit:junit:4.12" />
         </element>
       </element>

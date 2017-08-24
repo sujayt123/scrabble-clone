@@ -20,4 +20,12 @@ public class GameStateMessage extends Message {
     public GameStateMessage(GameStateItem gsi) {
         this.gsi = gsi;
     }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (other == null || !(other instanceof GameStateMessage))
+            return false;
+        return ((GameStateMessage)other).getGsi().equals(this.getGsi());
+    }
 }

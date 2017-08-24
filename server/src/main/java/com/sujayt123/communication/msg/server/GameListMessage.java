@@ -19,4 +19,24 @@ public class GameListMessage extends Message {
     public void setGames(GameListItem[] games) {
         this.games = games;
     }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (other == null || !(other instanceof GameListMessage))
+        {
+            return false;
+        }
+        GameListMessage otherGlm = (GameListMessage) other;
+
+        if (this.games.length != otherGlm.getGames().length)
+            return false;
+
+        for (int i = 0; i < this.games.length; i++)
+        {
+            if (this.games[i] == null || !this.games[i].equals(otherGlm.getGames()[i]))
+                return false;
+        }
+        return true;
+    }
 }
