@@ -1,4 +1,4 @@
 language: java
 
-after_success:
-  - mvn clean test org.jacoco:jacoco-maven-plugin:report org.eluder.coveralls:coveralls-maven-plugin:report
+script:
+  - mvn clean install org.jacoco:jacoco-maven-plugin:report org.eluder.coveralls:coveralls-maven-plugin:report
