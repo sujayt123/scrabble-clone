@@ -59,7 +59,6 @@
                     <includes>
                         <include>**/*IntegrationTest*</include>
                     </includes>
-                    <argLine>${jacoco.agent.itArgLine}</argLine> (2)
                 </configuration>
                 <executions>
                     <execution>
