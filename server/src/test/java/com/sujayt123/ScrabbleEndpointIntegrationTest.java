@@ -118,10 +118,11 @@ public class ScrabbleEndpointIntegrationTest {
          * TODO
          */
 
-        sendMessage(s1, new CreateGameMessage());
+        sendMessage(s1, new CreateGameMessage("user2"));
 
-        Thread.sleep(800);
-        assertEquals(msgQueue.size(), 3);
+        Thread.sleep(1500);
+
+        assertEquals(3, msgQueue.size());
         Message msg1 = msgQueue.take();
         Message msg2 = msgQueue.take();
         Message msg3 = msgQueue.take();
