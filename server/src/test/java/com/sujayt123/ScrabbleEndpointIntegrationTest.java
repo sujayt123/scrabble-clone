@@ -56,13 +56,72 @@ public class ScrabbleEndpointIntegrationTest {
      */
     static final BlockingQueue<Message> msgQueue = new ArrayBlockingQueue<>(10);
 
+    /**
+     * The queue where the expected responses are stored.
+     */
     private Queue<Message> expectedQueue;
 
+    /**
+     * The game id of the first created game in this test instance.
+     */
     private int firstGameIdInTest;
+
+    /**
+     *  Pops an item off the blocking queue and checks to see if it equals the
+     *  expected response on the expected queue.
+     */
+    private Function<BlockingQueue<Message>, Boolean> equalsAssertion;
+
+    /**
+     * Pops three items off the blocking queue corresponding to the received responses
+     * to a valid update to the board state (via a player's turn). Three items because
+     * in this integration test, three separate clients are participants of the game
+     * (under the identity of 2 players).
+     */
+    private Function<BlockingQueue<Message>, Boolean> moveVerifyingAssertion;
 
     @Before
     public void setup() {
         GameListItem[] emptyGameListSingleton = new GameStateItem[0];
+        equalsAssertion =
+            blockingQueue -> {
+                try {
+                    Message received = blockingQueue.take();
+                    Message expected = expectedQueue.poll();
+                    return expected.equals(received);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            };
+        moveVerifyingAssertion =
+                (blockingQueue) -> {
+                    try {
+                        Message m1, m2, m3;
+                        if ((m1 = blockingQueue.take()) instanceof UnauthorizedMessage)
+                            return false;
+                        if ((m2 = blockingQueue.take()) instanceof UnauthorizedMessage)
+                            return false;
+                        if ((m3 = blockingQueue.take()) instanceof UnauthorizedMessage)
+                            return false;
+                        if (!(m1 instanceof GameStateMessage
+                                && m2 instanceof GameStateMessage
+                                && m3 instanceof GameStateMessage))
+                            return false;
+                        Set<GameStateItem> receivedSet = new HashSet<>();
+                        receivedSet.add(((GameStateMessage) m1).getGsi());
+                        receivedSet.add(((GameStateMessage) m2).getGsi());
+                        receivedSet.add(((GameStateMessage) m3).getGsi());
+                        Set<GameStateItem> expectedSet = new HashSet<>();
+                        expectedSet.add(((GameStateMessage)expectedQueue.poll()).getGsi());
+                        expectedSet.add(((GameStateMessage)expectedQueue.poll()).getGsi());
+                        expectedSet.add(((GameStateMessage)expectedQueue.poll()).getGsi());
+                        return (expectedSet.equals(receivedSet));
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return false;
+                };
         expectedQueue = new ConcurrentLinkedDeque<>();
         firstGameIdInTest = ScrabbleEndpoint.dbService.getIdOfNextGame().get();
         expectedQueue.add(new AuthorizedMessage());
@@ -110,7 +169,6 @@ public class ScrabbleEndpointIntegrationTest {
                 true
         )));
 
-
         expectedQueue.add(new GameStateMessage(new GameStateItem(
                 "user2",
                 firstGameIdInTest,
@@ -129,17 +187,17 @@ public class ScrabbleEndpointIntegrationTest {
          * After the first game update, user2 receives a GameStateMessage and each of user1's 2 game
          *  clients receive a GameStateMessage. Recall that user2 created this game.
          */
-        char[][] newBoard = generateEmptyBoard();
-        newBoard[7][7] = 'S';
-        newBoard[7][8] = 'E';
-        newBoard[7][9] = 'T';
+        char[][] boardAfterFirstMove = generateEmptyBoard();
+        boardAfterFirstMove[7][7] = 'S';
+        boardAfterFirstMove[7][8] = 'E';
+        boardAfterFirstMove[7][9] = 'T';
 
         expectedQueue.add(new GameStateMessage(new GameStateItem(
                 "user1",
                 firstGameIdInTest,
                 6,
                 0,
-                newBoard,
+                boardAfterFirstMove,
                 generateEmptyBoard(),
                 "WOIDIYI",
                 false
@@ -150,7 +208,7 @@ public class ScrabbleEndpointIntegrationTest {
                 firstGameIdInTest,
                 0,
                 6,
-                newBoard,
+                boardAfterFirstMove,
                 generateEmptyBoard(),
                 "AGISEGO",
                 true
@@ -161,10 +219,53 @@ public class ScrabbleEndpointIntegrationTest {
                 firstGameIdInTest,
                 0,
                 6,
-                newBoard,
+                boardAfterFirstMove,
                 generateEmptyBoard(),
                 "AGISEGO",
                 true
+        )));
+
+        expectedQueue.add(new UnauthorizedMessage());
+        expectedQueue.add(new UnauthorizedMessage());
+
+        char[][] boardAfterSecondMove = generateEmptyBoard();
+
+        boardAfterSecondMove[7][7] = 'S';
+        boardAfterSecondMove[7][8] = 'E';
+        boardAfterSecondMove[7][9] = 'T';
+        boardAfterSecondMove[6][8] = 'A';
+
+        expectedQueue.add(new GameStateMessage(new GameStateItem(
+                "user1",
+                firstGameIdInTest,
+                6,
+                3,
+                boardAfterSecondMove,
+                boardAfterFirstMove,
+                "WOIDIYI",
+                true
+        )));
+
+        expectedQueue.add(new GameStateMessage(new GameStateItem(
+                "user2",
+                firstGameIdInTest,
+                3,
+                6,
+                boardAfterSecondMove,
+                boardAfterFirstMove,
+                "GISEGOH",
+                false
+        )));
+
+        expectedQueue.add(new GameStateMessage(new GameStateItem(
+                "user2",
+                firstGameIdInTest,
+                3,
+                6,
+                boardAfterSecondMove,
+                boardAfterFirstMove,
+                "GISEGOH",
+                false
         )));
 
     }
@@ -235,7 +336,7 @@ public class ScrabbleEndpointIntegrationTest {
         sendMessage(s1, new ChooseGameMessage(firstGameIdInTest));
         sendMessage(s2, new ChooseGameMessage(firstGameIdInTest));
 
-        /* Try making a gameupdate move */
+        /* User2 tries to make a gameupdate move */
         char[][] invalidBoard = generateEmptyBoard();
         invalidBoard[0][0] = 'S';
         invalidBoard[1][0] = 'E';
@@ -254,34 +355,35 @@ public class ScrabbleEndpointIntegrationTest {
         validBoard[7][8] = 'E';
         validBoard[7][9] = 'T';
 
-        sendMessage(s1, new MoveMessage(firstGameIdInTest, validBoard),
-                (blockingQueue) -> {
-                    try {
-                        Message m1, m2, m3;
-                        if ((m1 = blockingQueue.take()) instanceof UnauthorizedMessage)
-                            return false;
-                        if ((m2 = blockingQueue.take()) instanceof UnauthorizedMessage)
-                            return false;
-                        if ((m3 = blockingQueue.take()) instanceof UnauthorizedMessage)
-                            return false;
-                        if (!(m1 instanceof GameStateMessage
-                                && m2 instanceof GameStateMessage
-                                && m3 instanceof GameStateMessage))
-                            return false;
-                        Set<GameStateItem> receivedSet = new HashSet<>();
-                        receivedSet.add(((GameStateMessage) m1).getGsi());
-                        receivedSet.add(((GameStateMessage) m2).getGsi());
-                        receivedSet.add(((GameStateMessage) m3).getGsi());
-                        Set<GameStateItem> expectedSet = new HashSet<>();
-                        expectedSet.add(((GameStateMessage)expectedQueue.poll()).getGsi());
-                        expectedSet.add(((GameStateMessage)expectedQueue.poll()).getGsi());
-                        expectedSet.add(((GameStateMessage)expectedQueue.poll()).getGsi());
-                        return (expectedSet.equals(receivedSet));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    return false;
-                }); // Should several GameStateMessages
+        sendMessage(s1, new MoveMessage(firstGameIdInTest, validBoard), moveVerifyingAssertion); // should return three messages of gamestates
+
+        /*
+         * User2 tries again to make a game update move, but fails. Even though she
+         * uses her own tiles and places them correctly, it's not her turn!
+         */
+        char[][] validButNotRightTurn = generateEmptyBoard();
+        validButNotRightTurn[7][7] = 'S';
+        validButNotRightTurn[7][8] = 'E';
+        validButNotRightTurn[7][9] = 'T';
+        validButNotRightTurn[6][8] = 'W';
+        sendMessage(s1, new MoveMessage(firstGameIdInTest, validButNotRightTurn)); // should return unauthorized message
+
+        /*
+         * User1 makes a move in response to User2's first move.
+         */
+        char[][] useTilesNotFromHand = validButNotRightTurn;
+        sendMessage(s2, new MoveMessage(firstGameIdInTest, useTilesNotFromHand)); // should return unauthorized message
+
+        validBoard = generateEmptyBoard();
+        validBoard[7][7] = 'S';
+        validBoard[7][8] = 'E';
+        validBoard[7][9] = 'T';
+        validBoard[6][8] = 'A';
+
+        sendMessage(s2, new MoveMessage(firstGameIdInTest, validBoard), moveVerifyingAssertion); // should return three messages of gamestates
+
+        assertEquals(0, expectedQueue.size());
+        assertEquals(0, msgQueue.size());
 
         ScrabbleEndpoint.dbService.deleteExistingAccount("user1");
         ScrabbleEndpoint.dbService.deleteExistingAccount("user2");
@@ -295,7 +397,7 @@ public class ScrabbleEndpointIntegrationTest {
      *
      * @param s
      * @param m
-     * @param nextAssertionToApply
+     * @param
      * @throws IOException
      * @throws EncodeException
      * @throws InterruptedException
@@ -318,20 +420,8 @@ public class ScrabbleEndpointIntegrationTest {
      * @throws EncodeException
      * @throws InterruptedException
      */
-    private void sendMessage(Session s, Message m) throws IOException, EncodeException, InterruptedException {
-        sendMessage(s, m, equalsAssertion());
-    }
 
-    private Function<BlockingQueue<Message>, Boolean> equalsAssertion () {
-        return blockingQueue -> {
-            try {
-                Message received = blockingQueue.take();
-                Message expected = expectedQueue.poll();
-                return expected.equals(received);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                return false;
-            }
-        };
+    private void sendMessage(Session s, Message m) throws IOException, EncodeException, InterruptedException {
+        sendMessage(s, m, equalsAssertion);
     }
 }
