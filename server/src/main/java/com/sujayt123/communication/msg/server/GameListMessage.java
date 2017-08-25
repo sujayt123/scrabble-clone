@@ -5,21 +5,30 @@ import com.sujayt123.communication.msg.Message;
 import java.util.Arrays;
 
 /**
+ * A message containing minimal details about each game in which the client is involved.
+ *
  * Created by sujay on 8/14/17.
  */
 public class GameListMessage extends Message {
+    /**
+     * The array of game information.
+     */
+    private GameListItem[] games;
+
+    /**
+     * Constructor.
+     * @param games the array of game information
+     */
     public GameListMessage(GameListItem[] games) {
         this.games = games;
     }
 
-    private GameListItem[] games;
-
+    /**
+     * Getter for the array of game information.
+     * @return the array of game information
+     */
     public GameListItem[] getGames() {
         return games;
-    }
-
-    public void setGames(GameListItem[] games) {
-        this.games = games;
     }
 
     @Override

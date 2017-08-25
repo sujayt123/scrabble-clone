@@ -3,19 +3,30 @@ package com.sujayt123.communication.msg.server;
 import com.sujayt123.communication.msg.Message;
 
 /**
+ * A message containing information regarding the client's vision of a particular game.
+ *
  * Created by sujay on 8/15/17.
  */
 public class GameStateMessage extends Message {
+
+    /**
+     * Detailed information about the client's view of the game.
+     */
     private GameStateItem gsi;
 
+    /**
+     * Getter for the client's view of the game.
+     * @return the client's view of the game
+     */
     public GameStateItem getGsi() {
         return gsi;
     }
 
-    public void setGsi(GameStateItem gsi) {
-        this.gsi = gsi;
-    }
 
+    /**
+     * Constructor
+     * @param gsi the client's view of the game to set
+     */
     public GameStateMessage(GameStateItem gsi) {
         this.gsi = gsi;
     }
