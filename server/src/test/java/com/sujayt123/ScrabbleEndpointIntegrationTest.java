@@ -58,18 +58,12 @@ public class ScrabbleEndpointIntegrationTest {
 
     private Queue<Message> expectedQueue;
 
-    private boolean requestMade;
-
-    private Function<BlockingQueue<Message>, Boolean> currentAssertion;
-
     private int firstGameIdInTest;
 
     @Before
     public void setup() {
         GameListItem[] emptyGameListSingleton = new GameStateItem[0];
-        currentAssertion = equalsAssertion();
         expectedQueue = new ConcurrentLinkedDeque<>();
-        requestMade = false;
         firstGameIdInTest = ScrabbleEndpoint.dbService.getIdOfNextGame().get();
         expectedQueue.add(new AuthorizedMessage());
         expectedQueue.add(new UnauthorizedMessage());
@@ -289,8 +283,6 @@ public class ScrabbleEndpointIntegrationTest {
                     return false;
                 }); // Should several GameStateMessages
 
-        sendMessage(s1, new MoveMessage(firstGameIdInTest, invalidBoard)); // Should yield UnauthorizedMessage
-
         ScrabbleEndpoint.dbService.deleteExistingAccount("user1");
         ScrabbleEndpoint.dbService.deleteExistingAccount("user2");
 
@@ -308,19 +300,14 @@ public class ScrabbleEndpointIntegrationTest {
      * @throws EncodeException
      * @throws InterruptedException
      */
-    private void sendMessage(Session s, Message m, Function<BlockingQueue<Message>, Boolean> nextAssertionToApply) throws IOException, EncodeException, InterruptedException {
-        /* Wait until the queue is empty to send this message (and *produce* another response) */
-        if (!requestMade || expectedQueue.size() == 0) {
-            requestMade = true;
-        } else {
-            /* Ensure we got the response we expected before we proceed to the next request. */
-
-            if (!currentAssertion.apply(msgQueue)) {
-                assertFalse(true);
-            }
-            currentAssertion = nextAssertionToApply;
-        }
+    private void sendMessage(Session s, Message m, Function<BlockingQueue<Message>, Boolean> assertionToApply) throws IOException, EncodeException, InterruptedException {
+        /* Send the message */
         s.getBasicRemote().sendObject(m);
+
+        /* Apply the assertion to the response, blocking as needed */
+        if (!assertionToApply.apply(msgQueue)) {
+                assertFalse(true);
+        }
     }
 
     /**
