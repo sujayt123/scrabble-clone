@@ -42,7 +42,6 @@ public class DbService {
         password = System.getenv("password");
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            System.out.println(dbUrl + '\n' + dbname + '\n' + username + '\n' + password);
             connection = DriverManager.getConnection(dbUrl + '/' + dbname, username, password);
         } catch (SQLException | IllegalAccessException | ClassNotFoundException | InstantiationException e) {
             e.printStackTrace();

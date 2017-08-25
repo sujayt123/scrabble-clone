@@ -7,6 +7,8 @@ import com.sujayt123.communication.MessageEncoder;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,8 +81,6 @@ public class ScrabbleEndpoint {
                 if (loginRetVal.isPresent())
                 {
                     /* Mark the user as authorized via the session to user map. */
-                    System.out.println(sessionToUserIdMap.containsKey(session));
-                    System.out.println(sessionToUserIdMap);
                     sessionToUserIdMap.put(session, loginRetVal.get());
                     session.getUserProperties().put("username", ((LoginMessage) m).getUsername());
                     session.getBasicRemote().sendObject(new GameListMessage(dbService.getGamesForPlayer(loginRetVal.get()).orElse(new GameListItem[0])));
@@ -204,5 +204,15 @@ public class ScrabbleEndpoint {
         logr.log(Level.INFO, "Closing session with websocket client.");
         // Remove the client's session from the active session map.
         sessionToUserIdMap.remove(session);
+    }
+
+    @OnError
+    public void onError(Throwable e)
+    {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        String sStackTrace = sw.toString(); // stack trace as a string
+        logr.log(Level.SEVERE, sStackTrace);
     }
 }

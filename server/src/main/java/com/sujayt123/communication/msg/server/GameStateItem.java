@@ -26,19 +26,15 @@ public class GameStateItem extends GameListItem {
     @Override
     public String toString()
     {
-        String out = super.toString() + "\nold board:\n";
-        for (int i = 0 ; i < 15; i++)
-        {
-            out += Arrays.toString(oldBoard[i]);
-        }
-        out += "\n current board \n";
-        for (int i = 0 ; i < 15; i++)
-        {
-            out += Arrays.toString(board[i]);
-        }
-        out += "\nhand\n" + clientHand;
-        out +="\n clientTurn: " + clientTurn;
-        return out;
+        StringBuilder s = new StringBuilder();
+        s.append(super.toString()).append('\n');
+        s.append("old board:\n").append(Arrays.deepToString(oldBoard));
+        s.append("\n\n");
+        s.append("current board:\n").append(Arrays.deepToString(board));
+        s.append("\n\n");
+        s.append("hand\n").append(clientHand).append('\n');
+        s.append("clientTurn:\n").append(clientTurn);
+        return s.toString();
     }
 
     @Override

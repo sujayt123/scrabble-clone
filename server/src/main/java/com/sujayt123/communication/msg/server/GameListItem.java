@@ -21,7 +21,7 @@ public class GameListItem {
     @Override
     public String toString()
     {
-        return String.format("oppName %s game_id %d clientScore %d opponentScore %d",
+        return String.format("oppName=%s game_id=%d clientScore=%d opponentScore=%d",
                 opponentName, game_id, clientScore, opponentScore);
     }
 
