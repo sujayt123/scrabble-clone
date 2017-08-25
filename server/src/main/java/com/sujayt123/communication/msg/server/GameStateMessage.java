@@ -16,7 +16,6 @@ public class GameStateMessage extends Message {
         this.gsi = gsi;
     }
 
-
     public GameStateMessage(GameStateItem gsi) {
         this.gsi = gsi;
     }
@@ -26,6 +25,13 @@ public class GameStateMessage extends Message {
     {
         if (other == null || !(other instanceof GameStateMessage))
             return false;
-        return ((GameStateMessage)other).getGsi().equals(this.getGsi());
+        return (gsi == null)
+                ? ((GameStateMessage) other).getGsi() == null : gsi.equals(((GameStateMessage) other).getGsi());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return (gsi == null) ? 7 : gsi.hashCode();
     }
 }

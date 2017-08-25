@@ -28,17 +28,28 @@ public class GameListItem {
     @Override
     public boolean equals(Object other)
     {
-        if (!(other instanceof GameListItem))
+        if (other == null || !(other instanceof GameListItem))
         {
             return false;
         }
 
         GameListItem otherItem = (GameListItem) other;
         return this.game_id == otherItem.getGame_id()
-                && this.opponentName.equals(otherItem.getOpponentName())
+                && (opponentName == null) ?
+                    otherItem.opponentName == null :
+                    this.opponentName.equals(otherItem.getOpponentName())
                 && this.clientScore == otherItem.getClientScore()
                 && this.opponentScore == otherItem.getOpponentScore();
+    }
 
+    @Override
+    public int hashCode()
+    {
+        int hash = 0;
+        hash += game_id * 7;
+        hash += clientScore * 11 + opponentScore * 131;
+        hash += (opponentName == null) ?  0 : opponentName.hashCode();
+        return hash;
     }
 
     public String getOpponentName() {

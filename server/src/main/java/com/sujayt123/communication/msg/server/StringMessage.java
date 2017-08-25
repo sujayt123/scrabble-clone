@@ -30,6 +30,13 @@ public class StringMessage extends Message {
         {
             return false;
         }
-        return this.message.equals(((StringMessage) other).getMessage());
+        return this.message == null
+                ? ((StringMessage)other).getMessage() == null : message.equals(((StringMessage) other).getMessage());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return (message == null) ? 19 : message.hashCode();
     }
 }

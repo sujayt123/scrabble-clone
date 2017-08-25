@@ -45,7 +45,7 @@ public class ScrabbleEndpoint {
      * A session is only truly "important" once the player has logged in.
      */
 
-    private Map<Session, Integer> sessionToUserIdMap = Collections.synchronizedMap(new HashMap<>());
+    private static Map<Session, Integer> sessionToUserIdMap = Collections.synchronizedMap(new HashMap<>());
 
 
     @OnOpen
@@ -59,26 +59,30 @@ public class ScrabbleEndpoint {
         logr.log(Level.INFO, "Received a message from a websocket client");
         switch(m.getType())
         {
+            /* Returns authorization of whether the account was created */
             case "class com.sujayt123.communication.msg.client.CreateAccountMessage":
                 CreateAccountMessage cam = (CreateAccountMessage) m;
                 Optional<Integer> createRetVal = dbService.createNewAccount(cam.getUsername(), cam.getPassword());
                 if (createRetVal.isPresent())
                 {
-                    sessionToUserIdMap.put(session, createRetVal.get());
-                    session.getBasicRemote().sendObject(new GameListMessage(new GameListItem[0]));
+                    session.getBasicRemote().sendObject(new AuthorizedMessage());
                 }
                 else
                 {
                     session.getBasicRemote().sendObject(new UnauthorizedMessage());
                 }
                 break;
+            /* Returns a list of games for the logged in player if request was authorized and valid */
             case "class com.sujayt123.communication.msg.client.LoginMessage":
                 LoginMessage login = (LoginMessage) m;
                 Optional<Integer> loginRetVal = dbService.login(login.getUsername(), login.getPassword());
                 if (loginRetVal.isPresent())
                 {
                     /* Mark the user as authorized via the session to user map. */
+                    System.out.println(sessionToUserIdMap.containsKey(session));
+                    System.out.println(sessionToUserIdMap);
                     sessionToUserIdMap.put(session, loginRetVal.get());
+                    session.getUserProperties().put("username", ((LoginMessage) m).getUsername());
                     session.getBasicRemote().sendObject(new GameListMessage(dbService.getGamesForPlayer(loginRetVal.get()).orElse(new GameListItem[0])));
                 }
                 else
@@ -86,8 +90,8 @@ public class ScrabbleEndpoint {
                     session.getBasicRemote().sendObject(new UnauthorizedMessage());
                 }
                 break;
+            /* Returns a game for the game view if request was authorized and valid */
             case "class com.sujayt123.communication.msg.client.ChooseGameMessage":
-
                 if (!sessionToUserIdMap.containsKey(session))
                 {
                     session.getBasicRemote().sendObject(new UnauthorizedMessage());
@@ -106,6 +110,8 @@ public class ScrabbleEndpoint {
                     session.getBasicRemote().sendObject(new UnauthorizedMessage());
                 }
                 break;
+
+            /* Returns a game state to each logged-in participant if request is authorized and valid */
             case "class com.sujayt123.communication.msg.client.MoveMessage":
                 MoveMessage moveMessage = (MoveMessage) m;
                 /*
@@ -155,29 +161,31 @@ public class ScrabbleEndpoint {
                 {
                     if (retVal.get().containsKey(e.getValue()))
                     {
-                        GameStateItem toSend = retVal.get().remove(e.getValue());
+                        GameStateItem toSend = retVal.get().get(e.getValue());
                         e.getKey().getBasicRemote().sendObject(new GameStateMessage(toSend));
                     }
                 }
-
-                // TODO TEST
                 break;
 
+            /* Returns an updated GameListMessage to the client if the request is authorized and valid */
             case "class com.sujayt123.communication.msg.client.CreateGameMessage":
-                // Ensure current player is logged in.
+                // Ensure current player is logged in, and has chosen a player other than him/herself to challenge.
                 if (!sessionToUserIdMap.containsKey(session))
+                {
+                    session.getBasicRemote().sendObject(new UnauthorizedMessage());
+                }
+                CreateGameMessage createGameMessage = (CreateGameMessage) m;
+                if (createGameMessage.getOpponentName().equals(session.getUserProperties().get("username")))
                 {
                     session.getBasicRemote().sendObject(new UnauthorizedMessage());
                     return;
                 }
-                CreateGameMessage createGameMessage = (CreateGameMessage) m;
 
                 Optional<Integer> createGameRetVal = dbService.createNewGame(sessionToUserIdMap.get(session), createGameMessage.getOpponentName());
 
                 if (createGameRetVal.isPresent())
                 {
-                    Optional<GameStateItem> game = dbService.getGameById(sessionToUserIdMap.get(session), createGameRetVal.get());
-                    session.getBasicRemote().sendObject(new GameStateMessage(game.get()));
+                    session.getBasicRemote().sendObject(new GameListMessage(dbService.getGamesForPlayer(sessionToUserIdMap.get(session)).get()));
                 }
                 else
                 {

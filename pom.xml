@@ -56,6 +56,9 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>2.12.4</version>
                 <configuration>
+                    <systemProperties>
+                        <environment>test</environment>
+                    </systemProperties>
                     <includes>
                         <include>**/*IntegrationTest*</include>
                     </includes>
@@ -77,6 +80,9 @@
                 <configuration>
                     <port>8080</port>
                     <path>/</path>
+                    <systemProperties>
+                        <environment>test</environment>
+                    </systemProperties>
                     <warSourceDirectory>web</warSourceDirectory>
                 </configuration>
                 <executions>

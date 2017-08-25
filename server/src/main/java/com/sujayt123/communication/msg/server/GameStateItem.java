@@ -52,14 +52,23 @@ public class GameStateItem extends GameListItem {
 
         GameStateItem otherItem = (GameStateItem) other;
 
-        for (int i = 0; i < 15; i++)
-            for (int j = 0; j < 15; j++)
-                if (otherItem.getBoard()[i][j] != this.board[i][j] ||
-                        otherItem.getOldBoard()[i][j] != this.oldBoard[i][j])
-                    return false;
+        if (this.clientHand == null ?
+                otherItem.getClientHand() != null : !clientHand.equals(otherItem.getClientHand()))
+            return false;
 
-        return this.clientHand.equals(otherItem.getClientHand()) &&
+        return Arrays.deepEquals(oldBoard, otherItem.getOldBoard()) &&
+                Arrays.deepEquals(board, otherItem.getBoard()) &&
                 this.clientTurn == otherItem.isClientTurn();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int hash = super.hashCode();
+        hash += Arrays.deepHashCode(board) + Arrays.deepHashCode(oldBoard);
+        hash += clientHand == null ? 0 : clientHand.hashCode();
+        hash += clientTurn ? 1 : 0;
+        return hash;
     }
 
     public char[][] getBoard() {

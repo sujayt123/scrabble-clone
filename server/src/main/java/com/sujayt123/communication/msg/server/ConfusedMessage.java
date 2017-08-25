@@ -11,4 +11,10 @@ public class ConfusedMessage extends Message {
     {
         return (other != null && other instanceof ConfusedMessage);
     }
+
+    @Override
+    public int hashCode()
+    {
+        return 1;
+    }
 }

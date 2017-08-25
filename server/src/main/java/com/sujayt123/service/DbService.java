@@ -28,12 +28,13 @@ public class DbService {
 
     private static final Trie trie = new Trie();
 
+    private String dbUrl, dbname, username, password;
+
     /**
      * Constructor. Establishes a connection to the database.
      */
     public DbService()
     {
-        String dbUrl, dbname, username, password;
 
         dbUrl = System.getenv("dbUrl");
         dbname = System.getenv("dbname");
@@ -65,7 +66,6 @@ public class DbService {
             /* Check if the user with username ${username} already exists in the system */
             if (resultSet.next())
             {
-                System.out.println("UYAAAAAAAAAAA");
                 return Optional.empty();
             }
 
@@ -261,7 +261,7 @@ public class DbService {
             Statement statement = connection.createStatement();
 
             /* Get all details about games in which they're either the first or second player */
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM games where p1id = " + playerId + " OR p2id = " + playerId);
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM games where p1id = " + playerId + " OR p2id = " + playerId + " ORDER BY game_id");
 
             while (resultSet.next())
             {
@@ -505,6 +505,28 @@ public class DbService {
         }
         catch (SQLException e)
         {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Returns the unique (autoincremented) identifier of the next game to insert in the
+     * database.
+     *
+     * @return the current value of the autoincrement variable in the database
+     */
+    public Optional<Integer> getIdOfNextGame()
+    {
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT `AUTO_INCREMENT` FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '" + dbname + "' AND TABLE_NAME = 'games'");
+            if (!rs.next())
+            {
+                return Optional.empty();
+            }
+            return Optional.of(rs.getInt(1));
+        } catch (SQLException e) {
             e.printStackTrace();
         }
         return Optional.empty();

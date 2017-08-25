@@ -89,6 +89,9 @@ public class DbServiceTest {
         db.deleteExistingAccount("hello");
         db.deleteExistingAccount("hello2");
 
+        Optional<Integer> lastGameIdOptional = db.getIdOfNextGame();
+        assertTrue(lastGameIdOptional.isPresent());
+        int lastGameId = lastGameIdOptional.get();
 
         /* Set up dummy accounts */
         Optional<Integer> helloCreationSuccess, hello2CreationSuccess, helloLoginSuccess, hello2LoginSuccess;

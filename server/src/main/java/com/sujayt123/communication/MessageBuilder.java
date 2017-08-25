@@ -5,6 +5,7 @@ import com.sujayt123.communication.msg.Message;
 import com.google.gson.Gson;
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonString;
 import java.io.StringReader;
 import java.util.Optional;
 
@@ -20,7 +21,13 @@ public class MessageBuilder {
         JsonObject jsonObject = Json
                 .createReader(new StringReader(s)).readObject();
         // ... so that you can determine the class type.
-        String classType = jsonObject.getString("type").split(" ")[1];
+        if (!jsonObject.containsKey("type") || !(jsonObject.get("type") instanceof JsonString))
+            return Optional.empty();
+
+        String typeString = jsonObject.getString("type");
+        if (!typeString.contains("com.sujayt123.") || !typeString.contains("class"))
+            return Optional.empty();
+        String classType = typeString.split(" ")[1];
 
         /*
          * Once you know the class type, use Gson in conjunction

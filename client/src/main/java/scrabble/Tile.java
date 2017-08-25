@@ -27,8 +27,22 @@ public class Tile {
      */
     public static Queue<Character> getTileBagForGame()
     {
-        // Shuffle the tiles and arrange them into a queue.
-        Collections.shuffle(tileList);
+        /*
+         * If this process is running under a test environment, use a fixed seed for
+         * generating random games.
+         */
+        String environment;
+        if ((environment = System.getProperty("environment")) != null
+                && environment.equals("test"))
+        {
+            Collections.shuffle(tileList, new Random(100));
+        }
+
+        else
+        {
+            Collections.shuffle(tileList);
+        }
+
         return new ArrayDeque<>(tileList);
     }
 

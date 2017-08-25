@@ -11,4 +11,10 @@ public class UnauthorizedMessage extends Message {
     {
         return (other != null && other instanceof UnauthorizedMessage);
     }
+
+    @Override
+    public int hashCode()
+    {
+        return 77;
+    }
 }

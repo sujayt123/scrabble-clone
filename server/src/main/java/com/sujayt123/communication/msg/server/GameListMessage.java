@@ -2,6 +2,8 @@ package com.sujayt123.communication.msg.server;
 
 import com.sujayt123.communication.msg.Message;
 
+import java.util.Arrays;
+
 /**
  * Created by sujay on 8/14/17.
  */
@@ -21,6 +23,15 @@ public class GameListMessage extends Message {
     }
 
     @Override
+    public String toString()
+    {
+        StringBuilder s = new StringBuilder();
+        for (GameListItem g: games)
+            s.append(g.toString()).append('\n');
+        return s.toString();
+    }
+
+    @Override
     public boolean equals(Object other)
     {
         if (other == null || !(other instanceof GameListMessage))
@@ -29,14 +40,12 @@ public class GameListMessage extends Message {
         }
         GameListMessage otherGlm = (GameListMessage) other;
 
-        if (this.games.length != otherGlm.getGames().length)
-            return false;
+        return Arrays.equals(games, otherGlm.getGames());
+    }
 
-        for (int i = 0; i < this.games.length; i++)
-        {
-            if (this.games[i] == null || !this.games[i].equals(otherGlm.getGames()[i]))
-                return false;
-        }
-        return true;
+    @Override
+    public int hashCode()
+    {
+        return Arrays.hashCode(games);
     }
 }
